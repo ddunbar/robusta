@@ -1,0 +1,1 @@
+recursive-include robusta *.html *.js *.css *.ico *.png
