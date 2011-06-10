@@ -15,6 +15,10 @@ frontend = flask.Module(__name__)
 def index():
     return render_template("index.html")
 
+@frontend.route('/favicon.ico')
+def favicon():
+    return redirect(url_for(".static", filename='favicon.ico'))
+
 ###
 # Session Management
 
