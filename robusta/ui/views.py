@@ -1,3 +1,5 @@
+import binascii
+
 import flask
 from flask import current_app
 from flask import redirect
@@ -33,3 +35,33 @@ def login():
 def logout():
     session.pop('active_user', None)
     return redirect(url_for("index"))
+
+###
+# Tasting's APIs
+
+@frontend.route('/tastings')
+def tastings():
+    # Get the tastings collection.
+    tastings = current_app.db.tastings
+    
+    # Return the limited tastings information.
+    result = []
+    for tasting in tastings.find():
+        result.append({ "id" : binascii.hexlify(tasting['_id'].binary),
+                        "name" : tasting['name'] })
+
+    return flask.jsonify(tastings = result)
+
+@frontend.route('/add_tasting')
+def add_tasting():
+    # Create a new tasting object.
+    tasting = { "name" : "New Tasting",
+                "variables" : [],
+                "metrics" : [] }
+
+    # Get the tastings collection.
+    tastings = current_app.db.tastings
+    res = tastings.insert(tasting);
+
+    # Return the tasting ID.
+    return flask.jsonify(result = binascii.hexlify(tasting['_id'].binary))
