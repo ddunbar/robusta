@@ -1,3 +1,4 @@
+import pymongo
 import flask
 
 import robusta.ui.views
@@ -18,7 +19,9 @@ class App(flask.Flask):
 
     def __init__(self, name):
         super(App, self).__init__(name)
-
+        self.connection = pymongo.Connection()
+        self.db = self.connection['robusta_db']
+        
     def load_config(self, config_path):
         if config_path is not None:
             self.config.from_pyfile(config_path)
