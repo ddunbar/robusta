@@ -64,4 +64,5 @@ def add_tasting():
     res = tastings.insert(tasting);
 
     # Return the tasting ID.
-    return flask.jsonify(result = binascii.hexlify(tasting['_id'].binary))
+    return flask.jsonify(new_tasting_id = binascii.hexlify(
+            tasting['_id'].binary))

@@ -42,6 +42,8 @@ function TastingsWidget(robusta) {
     this.widget = null;
     this.tastings = null;
     this.tastings_list = null;
+    this.selected_tasting_id = null;
+    this.selected_tasting_ui_item = null;
 }
 
 TastingsWidget.prototype.init = function(parent) {
@@ -69,6 +71,7 @@ TastingsWidget.prototype.add_tasting = function() {
     this.robusta.set_status("adding a tasting...");
     $.getJSON("/add_tasting", {}, function (data) {
         self.robusta.set_status("added a tasting.");
+        self.selected_tasting_id = data['new_tasting_id'];
         self.update_tastings();
       });
 }
@@ -82,14 +85,43 @@ TastingsWidget.prototype.update_tastings = function() {
 
         // Clear the tastings list.
         self.tastings_list.empty();
+        self.selected_tasting_list_ui_item = null;
 
         // Add all the tastings.
         for (var i = 0; i != tastings.length; ++i) {
             var item = tastings[i];
-            self.tastings_list.append('<div class="robusta-tastings-list-item">' +
-                                      item['name'] + '</div>');
+
+            var entry = $('<div class="robusta-tastings-list-item">' +
+                          item['name'] + '</div>');
+            entry.appendTo(self.tastings_list);
+            entry.bind('click', { id: item['id'], entry: entry }, function(event) {
+                self.set_selected_tasting(event.data.id, event.data.entry);
+            })
+
+            // Find the selected marker.
+            if (item['id'] == self.selected_tasting_id) {
+                self.set_selected_tasting(item['id'], entry);
+            }
+        }
+
+        // Clear the selected tasting id if it was invalid.
+        if (self.selected_tasting_list_ui_item === null) {
+            self.selected_tasting_id = null;
         }
 
         self.robusta.set_status("loaded tastings.");
       });
+}
+
+TastingsWidget.prototype.set_selected_tasting = function(id, ui_item) {
+    if (this.selected_tasting_list_ui_item !== null) {
+        this.selected_tasting_list_ui_item.toggleClass('selected');
+    }
+
+    this.selected_tasting_id = id;
+    this.selected_tasting_list_ui_item = ui_item;
+
+    ui_item.toggleClass('selected');
+
+    this.robusta.set_status("selected: " + id);
 }

@@ -13,9 +13,15 @@
 .robusta-tastings-list {
     border: 1px solid #bbbbbb;
     padding: 3px;
+    height: 100px;
+    overflow: auto;
 }
 
 .robusta-tastings-list-item {
     border: 1px solid #000000;
     padding: 2px;
+}
+
+.selected {
+    background: #dedede;
 }
