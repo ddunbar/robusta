@@ -1,8 +1,16 @@
 {% extends "layout.html" %}
 
 {% block title %}home{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" type="text/css" href="/static/robusta.css">
+  <script src="{{ url_for('.static',
+                          filename='jquery/1.5/jquery.js')}}"></script>
+  <script src="{{ url_for('.static', filename='robusta.js') }}"></script>
+{% endblock %}
+
 {% block body %}
 
-Robusta!
+<div id="robusta_ui"></div>
 
 {% endblock %}
