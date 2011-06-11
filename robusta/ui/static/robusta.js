@@ -186,6 +186,10 @@ TastingEditorWidget.prototype.init = function(parent) {
 TastingEditorWidget.prototype.delete_tasting = function() {
     var self = this;
 
+    // Confirm with the user.
+    if (!confirm('Really remove tasting "' + this.item['name'] + '"?'))
+        return;
+
     this.list.robusta.set_status('remove tasting "' + this.item['name'] + '"...');
     $.getJSON("/tasting/" + this.item['id'] + "/delete", {}, function (data) {
         self.list.selected_id = null;
