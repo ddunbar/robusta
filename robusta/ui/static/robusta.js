@@ -188,6 +188,38 @@ TastingEditorWidget.prototype.init = function(parent) {
     b = $('<input type="button" value="Delete">');
     b.appendTo(this.widget);
     b.click(function () { self.delete_tasting(); })
+
+    // Add the list of variables and a button for adding a new one.
+    var variables = $("<div></div>");
+    variables.append("Test Variables:");
+    b = $('<input type="button" value="Add Variable">');
+    b.appendTo(variables);
+    b.click(function () {
+        var variable = { name : "New Variable" }
+        self.item['variables'].push(variable);
+        new TastingVariableEditorWidget(self, variable).init(variables);
+    })
+    for (var i = 0; i != this.item['variables'].length; ++i) {
+        var w = new TastingVariableEditorWidget(this, this.item['variables'][i]);
+        w.init(variables);
+    }
+    variables.appendTo(this.widget);
+
+    // Add the list of metrics and a button for adding a new one.
+    var metrics = $("<div></div>");
+    metrics.append("Test Metrics:");
+    b = $('<input type="button" value="Add Metric">');
+    b.appendTo(metrics);
+    b.click(function () {
+        var metric = { name : "New Metric" }
+        self.item['metrics'].push(metric);
+        new TastingMetricEditorWidget(self, metric).init(metrics);
+    })
+    for (var i = 0; i != this.item['metrics'].length; ++i) {
+        var w = new TastingMetricEditorWidget(this, this.item['metrics'][i]);
+        w.init(metrics);
+    }
+    metrics.appendTo(this.widget);
 }
 
 TastingEditorWidget.prototype.save_tasting = function() {
@@ -199,7 +231,6 @@ TastingEditorWidget.prototype.save_tasting = function() {
 
     // Copy the UI values back into the reference object.
     this.item['name'] = this.item_name_input.value;
-    console.log(this.item['name']);
     
     this.list.robusta.set_status('saving tasting "' + this.item['name'] + '"...');
     var data = {'tasting' : JSON.stringify(this.item) };
@@ -220,4 +251,40 @@ TastingEditorWidget.prototype.delete_tasting = function() {
         self.list.selected_id = null;
         self.list.update_tastings();
       });
+}
+
+/* Tasting Metric Editor UI Widget */
+
+function TastingMetricEditorWidget(editor, item) {
+    this.editor = editor;
+    this.item = item;
+    this.widget = null;
+}
+
+TastingMetricEditorWidget.prototype.init = function(parent) {
+    var self = this;
+
+    // Create the widget.
+    this.widget = $('<div class="robusta-tasting-metric-editor"></div>');
+    this.widget.appendTo(parent);
+
+    this.widget.append(this.item.toString());
+}
+
+/* Tasting Variable Editor UI Widget */
+
+function TastingVariableEditorWidget(editor, item) {
+    this.editor = editor;
+    this.item = item;
+    this.widget = null;
+}
+
+TastingVariableEditorWidget.prototype.init = function(parent) {
+    var self = this;
+
+    // Create the widget.
+    this.widget = $('<div class="robusta-tasting-variable-editor"></div>');
+    this.widget.appendTo(parent);
+
+    this.widget.append(this.item.toString());
 }

@@ -30,3 +30,11 @@
     padding: 3px;
     height: 250px;
 }
+
+.robusta-tasting-metric-editor {
+    border: 1px solid #aaaaaa;
+}
+
+.robusta-tasting-variable-editor {
+    border: 1px solid #aaaaaa;
+}
