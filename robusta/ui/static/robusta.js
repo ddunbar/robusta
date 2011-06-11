@@ -9,6 +9,16 @@ function init() {
     g.robusta.init();
 }
 
+// Helper functions.
+
+function array_remove(array, item) {
+    var index = array.indexOf(item);
+    if (index == -1)
+        return;
+
+    array.splice(index, 1);
+}
+
 /* Robusta Class */
 
 function Robusta(ui_elt_name) {
@@ -163,7 +173,6 @@ function TastingEditorWidget(item, list) {
     this.item = item;
     this.widget = null;
     this.list = list;
-    this.item_name_input = null;
 }
 
 TastingEditorWidget.prototype.init = function(parent) {
@@ -177,7 +186,7 @@ TastingEditorWidget.prototype.init = function(parent) {
     this.widget.append("Name:");
     var name_elt = $('<input type="text" value="' + this.item['name'] + '">');
     name_elt.appendTo(this.widget);
-    this.item_name_input = name_elt[0];
+    name_elt.change(function() { self.item['name'] = name_elt[0].value });
 
     // Add a button for saving this tasting.
     var b = $('<input type="button" value="Save">');
@@ -228,9 +237,6 @@ TastingEditorWidget.prototype.save_tasting = function() {
     // Confirm with the user.
     if (!confirm('Really save tasting?'))
         return;
-
-    // Copy the UI values back into the reference object.
-    this.item['name'] = this.item_name_input.value;
     
     this.list.robusta.set_status('saving tasting "' + this.item['name'] + '"...');
     var data = {'tasting' : JSON.stringify(this.item) };
@@ -268,7 +274,18 @@ TastingMetricEditorWidget.prototype.init = function(parent) {
     this.widget = $('<div class="robusta-tasting-metric-editor"></div>');
     this.widget.appendTo(parent);
 
-    this.widget.append(this.item.toString());
+    // Add a text input for the name.
+    var name_elt = $('<input type="text" value="' + this.item['name'] + '">');
+    name_elt.appendTo(this.widget);
+    name_elt.change(function() { self.item['name'] = name_elt[0].value });
+
+    // Add a button for removing this metric.
+    b = $('<input type="button" value="Delete">');
+    b.appendTo(this.widget);
+    b.click(function () {
+        self.widget.remove();
+        array_remove(self.editor.item['metrics'], self.item);
+      })
 }
 
 /* Tasting Variable Editor UI Widget */
@@ -286,5 +303,16 @@ TastingVariableEditorWidget.prototype.init = function(parent) {
     this.widget = $('<div class="robusta-tasting-variable-editor"></div>');
     this.widget.appendTo(parent);
 
-    this.widget.append(this.item.toString());
+    // Add a text input for the name.
+    var name_elt = $('<input type="text" value="' + this.item['name'] + '">');
+    name_elt.appendTo(this.widget);
+    name_elt.change(function() { self.item['name'] = name_elt[0].value });
+    
+    // Add a button for removing this variable.
+    b = $('<input type="button" value="Delete">');
+    b.appendTo(this.widget);
+    b.click(function () {
+        self.widget.remove();
+        array_remove(self.editor.item['variables'], self.item);
+      })
 }
