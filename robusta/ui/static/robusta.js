@@ -21,7 +21,7 @@ Robusta.prototype.init = function() {
     // Locate our UI element.
     this.ui_elt = $("#" + this.ui_elt_name);
 
-    // Add the tastings widget.
+    // Add the tastings list widget.
     this.tastings_ui = new TastingsWidget(this);
     this.tastings_ui.init(this.ui_elt);
 
@@ -40,7 +40,6 @@ Robusta.prototype.set_status = function(label) {
 function TastingsWidget(robusta) {
     this.robusta = robusta;
     this.widget = null;
-    this.tastings = null;
     this.tastings_list = null;
     this.selected_id = null;
     this.selected_item = null;
@@ -60,6 +59,12 @@ TastingsWidget.prototype.init = function(parent) {
     var ntb = $('<input type="button" value="New Tasting">');
     ntb.appendTo(this.widget);
     ntb.click(function () { self.add_tasting(); })
+
+    // Add the tasting editor widget container, we instantiate a tasting editor
+    // inside here on selection.
+    this.tasting_editor_container = $(
+        '<div robusta-tasting-editor-container></div>');
+    this.tasting_editor_container.appendTo(this.widget);
 
     // Queue a load of the tastings.
     setTimeout(function() { self.update_tastings() }, 1);
@@ -86,17 +91,23 @@ TastingsWidget.prototype.update_tastings = function() {
         // Clear the tastings list.
         self.tastings_list.empty();
         self.selected_item = null;
+        self.tasting_editor_container.empty();
+
+        // If nothing is selected (i.e., startup), select the last element.
+        if (self.selected_id === null && tastings.length) {
+            self.selected_id = tastings[tastings.length - 1]['id'];
+        }
 
         // Add all the tastings.
         for (var i = 0; i != tastings.length; ++i) {
             var item = tastings[i];
 
             var tli = new TastingsListItem(item, self);
-            var is_selected = item['id'] == self.selected_id;
-            tli.init(self.tastings_list, is_selected);
+            tli.init(self.tastings_list);
 
-            if (is_selected)
-                self.selected_item = tli;
+            // Reset the selected item.
+            if (item['id'] == self.selected_id)
+                tli.on_select();
         }
 
         // Clear the selected tasting id if it was invalid.
@@ -116,17 +127,12 @@ function TastingsListItem(item, list) {
     this.list = list;
 }
 
-TastingsListItem.prototype.init = function(parent, is_selected) {
+TastingsListItem.prototype.init = function(parent) {
     var self = this;
 
     // Create the widget.
     this.widget = $('<div class="robusta-tastings-list-item"></div>');
-    this.widget.appendTo(parent);
-
-    // Initialized selected class appropriately.
-    if (is_selected) {
-        this.widget.toggleClass('selected');
-    }
+    this.widget.prependTo(parent);
 
     // Add the content.
     this.widget.append(this.item['name']);
@@ -144,4 +150,45 @@ TastingsListItem.prototype.on_select = function() {
 
     this.widget.toggleClass('selected');
     this.list.robusta.set_status("selected: " + this.item['id']);
+
+    // Initialize the tasting editor.
+    var editor = new TastingEditorWidget(this.item, this.list);
+    this.list.tasting_editor_container.empty();
+    editor.init(this.list.tasting_editor_container);
+}
+
+/* Testing Editor UI Widget */
+
+function TastingEditorWidget(item, list) {
+    this.item = item;
+    this.widget = null;
+    this.list = list;
+}
+
+TastingEditorWidget.prototype.init = function(parent) {
+    var self = this;
+
+    // Create the widget.
+    this.widget = $('<div class="robusta-tasting-editor"></div>');
+    this.widget.appendTo(parent);
+
+    // Add the name editor.
+    this.widget.append("Name:");
+    var name_elt = $('<input type="text" value="' + this.item['name'] + '">');
+    name_elt.appendTo(this.widget);
+
+    // Add a button for remove this.
+    var b = $('<input type="button" value="Delete">');
+    b.appendTo(this.widget);
+    b.click(function () { self.delete_tasting(); })
+}
+
+TastingEditorWidget.prototype.delete_tasting = function() {
+    var self = this;
+
+    this.list.robusta.set_status('remove tasting "' + this.item['name'] + '"...');
+    $.getJSON("/tasting/" + this.item['id'] + "/delete", {}, function (data) {
+        self.list.selected_id = null;
+        self.list.update_tastings();
+      });
 }

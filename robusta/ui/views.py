@@ -1,4 +1,5 @@
 import binascii
+import pymongo.objectid
 
 import flask
 from flask import current_app
@@ -66,3 +67,12 @@ def add_tasting():
     # Return the tasting ID.
     return flask.jsonify(new_tasting_id = binascii.hexlify(
             tasting['_id'].binary))
+
+@frontend.route('/tasting/<id>/delete')
+def delete_tasting(id):
+    # Validate the ID.
+    binary = binascii.unhexlify(id)
+    
+    current_app.db.tastings.remove(pymongo.objectid.ObjectId(binary))
+
+    return flask.jsonify(result = 'OK')
