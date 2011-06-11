@@ -163,6 +163,7 @@ function TastingEditorWidget(item, list) {
     this.item = item;
     this.widget = null;
     this.list = list;
+    this.item_name_input = null;
 }
 
 TastingEditorWidget.prototype.init = function(parent) {
@@ -176,11 +177,35 @@ TastingEditorWidget.prototype.init = function(parent) {
     this.widget.append("Name:");
     var name_elt = $('<input type="text" value="' + this.item['name'] + '">');
     name_elt.appendTo(this.widget);
+    this.item_name_input = name_elt[0];
 
-    // Add a button for remove this.
-    var b = $('<input type="button" value="Delete">');
+    // Add a button for saving this tasting.
+    var b = $('<input type="button" value="Save">');
+    b.appendTo(this.widget);
+    b.click(function () { self.save_tasting(); })
+
+    // Add a button for removing this tasting.
+    b = $('<input type="button" value="Delete">');
     b.appendTo(this.widget);
     b.click(function () { self.delete_tasting(); })
+}
+
+TastingEditorWidget.prototype.save_tasting = function() {
+    var self = this;
+
+    // Confirm with the user.
+    if (!confirm('Really save tasting?'))
+        return;
+
+    // Copy the UI values back into the reference object.
+    this.item['name'] = this.item_name_input.value;
+    console.log(this.item['name']);
+    
+    this.list.robusta.set_status('saving tasting "' + this.item['name'] + '"...');
+    var data = {'tasting' : JSON.stringify(this.item) };
+    $.getJSON("/tasting/" + this.item['id'] + "/save", data, function (data) {
+        self.list.update_tastings();
+    });
 }
 
 TastingEditorWidget.prototype.delete_tasting = function() {

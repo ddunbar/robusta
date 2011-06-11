@@ -1,7 +1,9 @@
 import binascii
+import json
 import pymongo.objectid
 
 import flask
+from flask import abort
 from flask import current_app
 from flask import redirect
 from flask import render_template
@@ -48,8 +50,9 @@ def tastings():
     # Return the limited tastings information.
     result = []
     for tasting in tastings.find():
-        result.append({ "id" : binascii.hexlify(tasting['_id'].binary),
-                        "name" : tasting['name'] })
+        item = tasting.copy()
+        item["id"] = binascii.hexlify(item.pop('_id').binary)
+        result.append(item)
 
     return flask.jsonify(tastings = result)
 
@@ -71,8 +74,34 @@ def add_tasting():
 @frontend.route('/tasting/<id>/delete')
 def delete_tasting(id):
     # Validate the ID.
-    binary = binascii.unhexlify(id)
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
     
-    current_app.db.tastings.remove(pymongo.objectid.ObjectId(binary))
+    current_app.db.tastings.remove(oid)
+
+    return flask.jsonify(result = 'OK')
+
+@frontend.route('/tasting/<id>/save')
+def save_tasting(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    # Get the current object.
+    current = current_app.db.tastings.find_one({ '_id' : oid })
+
+    # Get the new JSON object.
+    tasting = json.loads(request.args.get('tasting'))
+    if tasting.pop('id', None) != binascii.hexlify(current['_id'].binary):
+        abort(400)
+
+    # Set the appropriate id.
+    tasting['_id'] = oid
+
+    # Reject attempts to change the keys.
+    if set(tasting) != set(current):
+        abort(400)
+
+    # Update the database entry.
+    current_app.db.tastings.remove(oid)
+    current_app.db.tastings.insert(tasting)
 
     return flask.jsonify(result = 'OK')
