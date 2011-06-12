@@ -24,11 +24,21 @@ body {
 }
 
 .header-user-info {
+    float: right;
     text-align: right;
+    padding-right: 10px;
 }
 
 .body {
     margin: 20px;
+}
+
+select {
+    border: 0px;
+    margin: 0px;
+}
+form {
+    display: inline;
 }
 
 .login-box {

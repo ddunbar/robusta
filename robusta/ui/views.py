@@ -28,16 +28,24 @@ def favicon():
 ###
 # Session Management
 
+def add_previous_user(user):
+    previous_users = session.get('previous_users', [])[:5]
+    if user not in previous_users:
+        session['previous_users'] = [user] + previous_users
+
 @frontend.route('/login', methods=['POST'])
 def login():
     # Log the user in.
     username = request.form['username']
     session['active_user'] = username
+    add_previous_user(username)
     return redirect(url_for("index"))
 
 @frontend.route('/logout')
 def logout():
-    session.pop('active_user', None)
+    user = session.pop('active_user', None)
+    if user:
+        add_previous_user(user)
     return redirect(url_for("index"))
 
 @frontend.route('/save_user_pref')

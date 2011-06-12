@@ -21,12 +21,21 @@
 <body>
   <div class="header">
     <div id="robusta-menu-ui"></div>
-    <div class="header-user-info">
       &nbsp;
-  {% if session.active_user %}
-      <i>{{ session.active_user }}</i> (<a href="{{
+    <div class="header-user-info">
+{# We only show this if someone is logged in, otherwise we force a fresh
+   login. #}
+{% if session.active_user %}
+      <form action="{{ url_for('login') }}" method="POST">
+        <select name="username" onchange="submit()">
+{% for name in session.previous_users %}
+          <option{{" selected" if session.active_user == name
+                  }}>{{ name }}</option>
+{% endfor %}
+        </select>
+      </form> (<a href="{{
         url_for('logout') }}">logout</a>)
-  {% endif %}
+{% endif %}
     </div>
   </div>
   <div class="body">
