@@ -77,6 +77,7 @@ def add_tasting():
     tasting = { "name" : "New Tasting",
                 "variables" : [],
                 "metrics" : [],
+                "technicians" : [],
                 "active" : False }
 
     # Get the tastings collection.
@@ -133,10 +134,6 @@ def save_tasting(id):
 
     # Set the appropriate id.
     tasting['_id'] = oid
-
-    # Reject attempts to change the keys.
-    if set(tasting) != set(current):
-        abort(400)
 
     # Update the database entry.
     current_app.db.tastings.remove(oid)

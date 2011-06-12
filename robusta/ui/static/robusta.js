@@ -177,6 +177,9 @@ function TastingEditorWidget(item, list) {
     this.item = item;
     this.widget = null;
     this.list = list;
+
+    if (this.item['technicians'] == undefined)
+        this.item['technicians'] = [];
 }
 
 TastingEditorWidget.prototype.init = function(parent) {
@@ -244,6 +247,23 @@ TastingEditorWidget.prototype.init = function(parent) {
         w.init(metrics);
     }
     metrics.appendTo(this.widget);
+
+    // Add the list of technicians.
+    var techs = $("<div></div>");
+    techs.append("Test Technicians:");
+    t = $('<input type="text">');
+    var techs_input = t[0];
+    techs_input.value = "";
+    for (var i = 0; i != this.item['technicians'].length; ++i) {
+        if (i)
+            techs_input.value += ",";
+        techs_input.value += this.item['technicians'][i];
+    }
+    t.change(function() {
+        self.item['technicians'] = techs_input.value.split(",");
+    });
+    t.appendTo(techs);
+    techs.appendTo(this.widget);
 }
 
 TastingEditorWidget.prototype.save_tasting = function() {
