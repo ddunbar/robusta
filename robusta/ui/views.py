@@ -45,7 +45,8 @@ def save_user_pref():
     preference = request.args.get('preference')
     value = request.args.get('value')
 
-    if preference not in ('active_menu_item',):
+    if preference not in ('active_menu_item',
+                          'active_tastings_item'):
         return abort(403)
 
     user = flask.session.get('active_user', None)

@@ -150,6 +150,10 @@ TastingsWidget.prototype.init = function(parent) {
     // Queue a load of the tastings.
     setTimeout(function() { self.update_tastings() }, 1);
 
+    // Try and select the last item automatically.
+    if (g.user_data.active_tastings_item != undefined)
+        this.selected_id = g.user_data.active_tastings_item;
+
     return this;
 }
 
@@ -247,6 +251,11 @@ TastingsListItem.prototype.on_select = function() {
     var editor = new TastingEditorWidget(this.item, this.list);
     this.list.tasting_editor_container.empty();
     editor.init(this.list.tasting_editor_container);
+
+    // Dispatch a JSON query to save the active menu item to user preferences.
+    var data = { 'preference' : "active_tastings_item",
+                 'value' : this.item['id'] };
+    $.getJSON("save_user_pref", data, function (data) {});
 }
 
 /* Testing Editor UI Widget */
