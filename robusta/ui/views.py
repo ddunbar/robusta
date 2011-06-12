@@ -18,7 +18,8 @@ frontend = flask.Module(__name__)
 
 @frontend.route('/')
 def index():
-    return render_template("index.html", user_data = current_app.get_user_data())
+    return render_template("index.html",
+                           user_data = current_app.get_user_data())
 
 @frontend.route('/favicon.ico')
 def favicon():
@@ -75,7 +76,8 @@ def add_tasting():
     # Create a new tasting object.
     tasting = { "name" : "New Tasting",
                 "variables" : [],
-                "metrics" : [] }
+                "metrics" : [],
+                "active" : False }
 
     # Get the tastings collection.
     tastings = current_app.db.tastings
@@ -91,6 +93,28 @@ def delete_tasting(id):
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
     
     current_app.db.tastings.remove(oid)
+
+    return flask.jsonify(result = 'OK')
+
+@admin_route('/tasting/<id>/activate')
+def activate_tasting(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    current_app.db.tastings.update({}, { "$set" : {
+                "active" : False} })
+    current_app.db.tastings.update({ "_id" : oid }, { "$set" : {
+                "active" : True} })
+
+    return flask.jsonify(result = 'OK')
+
+@admin_route('/tasting/<id>/deactivate')
+def deactivate_tasting(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    current_app.db.tastings.update({ "_id" : oid }, { "$set" : {
+                "active" : False} })
 
     return flask.jsonify(result = 'OK')
 

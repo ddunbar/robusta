@@ -42,5 +42,8 @@ class App(flask.Flask):
 
         return result
 
+    def get_active_tasting(self):
+        return self.db.tastings.find_one({'active' : True })
+
     def is_user_admin(self):
         return bool(self.get_user_data().get('admin'))

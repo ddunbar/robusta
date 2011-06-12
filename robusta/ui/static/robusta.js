@@ -202,6 +202,17 @@ TastingEditorWidget.prototype.init = function(parent) {
     b.appendTo(this.widget);
     b.click(function () { self.delete_tasting(); })
 
+    // Add a button for activating/deactivating this tasting.
+    if (this.item['active']) {
+        b = $('<input type="button" value="Deactivate">');
+        b.appendTo(this.widget);
+        b.click(function () { self.deactivate_tasting(); })
+    } else {
+        b = $('<input type="button" value="Activate">');
+        b.appendTo(this.widget);
+        b.click(function () { self.activate_tasting(); })
+    }
+
     // Add the list of variables and a button for adding a new one.
     var variables = $("<div></div>");
     variables.append("Test Variables:");
@@ -259,6 +270,39 @@ TastingEditorWidget.prototype.delete_tasting = function() {
     this.list.robusta.set_status('remove tasting "' + this.item['name'] + '"...');
     $.getJSON("/tasting/" + this.item['id'] + "/delete", {}, function (data) {
         self.list.selected_id = null;
+        self.list.update_tastings();
+      });
+}
+
+TastingEditorWidget.prototype.activate_tasting = function() {
+    var self = this;
+
+    // Confirm with the user.
+    if (!confirm('Activate tasting "' + this.item['name'] + '"?'))
+        return;
+
+    this.list.robusta.set_status('activating tasting "' + this.item['name'] +
+                                 '"...');
+    $.getJSON("/tasting/" + this.item['id'] + "/activate", {}, function (data) {
+        self.list.robusta.set_status('activated tasting "' + self.item['name'] +
+                                     '".');
+        self.list.update_tastings();
+      });
+}
+
+TastingEditorWidget.prototype.deactivate_tasting = function() {
+    var self = this;
+
+    // Confirm with the user.
+    if (!confirm('Deactivate tasting "' + this.item['name'] + '"?'))
+        return;
+
+    this.list.robusta.set_status('deactivating tasting "' + this.item['name'] +
+                                 '"...');
+    $.getJSON("/tasting/" + this.item['id'] + "/deactivate", {},
+              function (data) {
+        self.list.robusta.set_status('deactivated tasting "' +
+                                     self.item['name'] + '".');
         self.list.update_tastings();
       });
 }
