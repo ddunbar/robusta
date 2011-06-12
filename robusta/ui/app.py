@@ -40,6 +40,14 @@ class App(flask.Flask):
         if result is None:
             result = {}
 
+        # Automatically set the technician user bit based on the current
+        # tasting.
+        active_tasting = self.get_active_tasting()
+        if active_tasting and user in active_tasting.get('technicians',[]):
+            result['technician'] = True
+        else:
+            result['technician'] = False
+
         return result
 
     def get_active_tasting(self):

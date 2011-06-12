@@ -43,6 +43,20 @@ Robusta.prototype.init = function() {
         this.menu_bar.add_item("Tastings", w);
     }
 
+    // Add the tasting technician widget.
+    if (g.user_data.technician) {
+        var w = new TechnicianWidget(this);
+        w.init(this.ui_elt);
+        this.menu_bar.add_item("Technician", w);
+    }
+
+    // Add the testing UI.
+    if (1) {
+        var w = new TestingWidget(this);
+        w.init(this.ui_elt);
+        this.menu_bar.add_item("Testing", w);
+    }
+
     // Status bar element.
     var sb = $('<div class="robusta-status-bar">Status</div>');
     sb.appendTo(this.ui_elt);
@@ -425,4 +439,38 @@ TastingVariableEditorWidget.prototype.init = function(parent) {
         self.widget.remove();
         array_remove(self.editor.item['variables'], self.item);
       })
+}
+
+/* Taste Testing Technician UI */
+
+function TechnicianWidget(robusta) {
+    this.robusta = robusta;
+    this.widget = null;
+}
+
+TechnicianWidget.prototype.init = function(parent) {
+    var self = this;
+
+    // Create the widget.
+    this.widget = $('<div class="robusta-technician-editor"></div>');
+    this.widget.appendTo(parent);
+
+    this.widget.append("technician ui");
+}
+
+/* Taste Testing UI */
+
+function TestingWidget(robusta) {
+    this.robusta = robusta;
+    this.widget = null;
+}
+
+TestingWidget.prototype.init = function(parent) {
+    var self = this;
+
+    // Create the widget.
+    this.widget = $('<div class="robusta-testing-ui"></div>');
+    this.widget.appendTo(parent);
+
+    this.widget.append("taste testing ui");
 }
