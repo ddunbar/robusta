@@ -3,7 +3,7 @@
 /* Tastings UI Widget */
 
 .robusta-tastings-widget {
-    border: 2px solid #dddddd;
+    border: 2px solid #000;
     padding: 3px;
     width: 820px;
     height: 390px;
@@ -11,13 +11,13 @@
 }
 
 .robusta-tastings-list {
-    border: 1px solid #bbbbbb;
+    border: 1px solid #000;
     padding: 3px;
     height: 90px;
     overflow: auto;
 }
 .robusta-tastings-list-item {
-    border: 1px solid #000000;
+    border: 1px solid #000;
     padding: 2px;
 }
 
@@ -26,15 +26,15 @@
 }
 
 .robusta-tasting-editor {
-    border: 1px solid #dddddd;
+    border: 1px solid #000;
     padding: 3px;
     height: 250px;
 }
 
 .robusta-tasting-metric-editor {
-    border: 1px solid #aaaaaa;
+    border: 1px solid #000;
 }
 
 .robusta-tasting-variable-editor {
-    border: 1px solid #aaaaaa;
+    border: 1px solid #000;
 }

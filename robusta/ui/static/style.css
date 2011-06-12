@@ -1,6 +1,35 @@
 body {
-    background-color: #FFF;
+    background-color: #C2AD99;
     font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, Verdana,
                  Helvetica, sans-serif;
     font-size: small;
+    padding: 0px;
+    margin: 0px;
+}
+
+.header {
+    background-color: #9E7E5E;
+    font-size: small;
+    padding: 2px;
+    color: #FFF;
+    width: 100%;
+}
+.header a {
+    color: #FFF;
+    text-decoration: none;
+}
+
+.header-menu {
+    float: left;
+}
+
+.header-user-info {
+    text-align: right;
+}
+
+.body {
+    margin: 20px;
+}
+
+.login-box {
 }
