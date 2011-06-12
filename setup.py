@@ -35,5 +35,5 @@ setup(
             'robusta = robusta.robustatool:main',
             ],
         },
-    install_requires=['Flask', 'pymongo'],
+    install_requires=['Flask', 'pymongo', 'simplejson'],
 )
