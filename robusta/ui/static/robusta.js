@@ -19,6 +19,16 @@ function array_remove(array, item) {
     array.splice(index, 1);
 }
 
+function save_user_preference(key, value) {
+    var current_value = g.user_data[key];
+    if (current_value == value)
+        return;
+
+    g.user_data[key] = value;
+    $.getJSON("save_user_pref", { 'preference' : key, 'value' : value },
+              function (data) {});
+}
+
 /* Robusta Class */
 
 function Robusta(ui_elt_name) {
@@ -110,10 +120,7 @@ MenuBar.prototype.select_item = function(item) {
     this.active = item;
     this.active[1].activate();
 
-    // Dispatch a JSON query to save the active menu item to user preferences.
-    var data = { 'preference' : "active_menu_item",
-                 'value' : this.active[0] };
-    $.getJSON("save_user_pref", data, function (data) {});
+    save_user_preference("active_menu_item", this.active[0]);
 }
 
 /* Tastings UI Element */
@@ -252,10 +259,7 @@ TastingsListItem.prototype.on_select = function() {
     this.list.tasting_editor_container.empty();
     editor.init(this.list.tasting_editor_container);
 
-    // Dispatch a JSON query to save the active menu item to user preferences.
-    var data = { 'preference' : "active_tastings_item",
-                 'value' : this.item['id'] };
-    $.getJSON("save_user_pref", data, function (data) {});
+    save_user_preference("active_tastings_item", this.item['id']);
 }
 
 /* Testing Editor UI Widget */
