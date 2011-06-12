@@ -1,17 +1,47 @@
-{% extends "layout.html" %}
-
-{% block title %}home{% endblock %}
-
-{% block head %}
+<html>
+<head>
+  <title>robusta</title>
+  <link rel="stylesheet" type="text/css"{#
+        #} href="{{ url_for('.static', filename='style.css') }}">
   <link rel="stylesheet" type="text/css" href="/static/robusta.css">
   <script src="{{ url_for('.static',
                           filename='jquery/1.5/jquery.js')}}"></script>
   <script src="{{ url_for('.static',filename='json2.js')}}"></script>
   <script src="{{ url_for('.static', filename='robusta.js') }}"></script>
-{% endblock %}
 
-{% block body %}
-
-<div id="robusta_ui"></div>
-
-{% endblock %}
+  {# Add the user data. #}
+  <script>
+  {% if session.active_user %}
+    g.active_user = {{ session.active_user|tojson|safe }};
+  {% else %}
+    g.active_user = null;
+  {% endif %}
+    g.user_data = {{ user_data|tojson|safe }};
+  </script>
+</head>
+<body>
+  <div class="header">
+    <div class="header-menu">
+      <a href="{{ url_for('index') }}">robusta</a>
+    </div>
+    <div class="header-user-info">
+      &nbsp;
+  {% if session.active_user %}
+      <i>{{ session.active_user }}</i> (<a href="{{
+        url_for('logout') }}">logout</a>)
+  {% endif %}
+    </div>
+  </div>
+  <div class="body">
+    {% if session.active_user %}
+      <div id="robusta_ui"></div>
+    {% else %}
+      <div class="login-box">
+        <form action="{{ url_for('login') }}" method="POST">
+          Log In: <input type="text" name="username">
+        </form>
+      </div>
+    {% endif %}
+  </div>
+</body>
+</html>
