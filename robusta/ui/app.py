@@ -41,3 +41,6 @@ class App(flask.Flask):
             result = {}
 
         return result
+
+    def is_user_admin(self):
+        return bool(self.get_user_data().get('admin'))

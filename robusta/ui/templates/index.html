@@ -11,11 +11,6 @@
 
   {# Add the user data. #}
   <script>
-  {% if session.active_user %}
-    g.active_user = {{ session.active_user|tojson|safe }};
-  {% else %}
-    g.active_user = null;
-  {% endif %}
     g.user_data = {{ user_data|tojson|safe }};
   </script>
 </head>

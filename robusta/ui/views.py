@@ -42,7 +42,21 @@ def logout():
 ###
 # Tasting's APIs
 
-@frontend.route('/tastings')
+# Decorator for admin users.
+def admin_route(rule, **options):
+    def decorator(f):
+        def wrap(**args):
+            # Validate the user has admin access.
+            if not current_app.is_user_admin():
+                return abort(403)
+
+            return f(**args)
+
+        frontend.add_url_rule(rule, f.__name__, wrap, **options)
+        return wrap
+    return decorator
+
+@admin_route('/tastings')
 def tastings():
     # Get the tastings collection.
     tastings = current_app.db.tastings
@@ -56,7 +70,7 @@ def tastings():
 
     return flask.jsonify(tastings = result)
 
-@frontend.route('/add_tasting')
+@admin_route('/add_tasting')
 def add_tasting():
     # Create a new tasting object.
     tasting = { "name" : "New Tasting",
@@ -71,7 +85,7 @@ def add_tasting():
     return flask.jsonify(new_tasting_id = binascii.hexlify(
             tasting['_id'].binary))
 
-@frontend.route('/tasting/<id>/delete')
+@admin_route('/tasting/<id>/delete')
 def delete_tasting(id):
     # Validate the ID.
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
@@ -80,7 +94,7 @@ def delete_tasting(id):
 
     return flask.jsonify(result = 'OK')
 
-@frontend.route('/tasting/<id>/save')
+@admin_route('/tasting/<id>/save')
 def save_tasting(id):
     # Validate the ID.
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))

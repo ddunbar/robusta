@@ -24,6 +24,7 @@ function array_remove(array, item) {
 function Robusta(ui_elt_name) {
     this.ui_elt_name = ui_elt_name;
     this.ui_elt = null;
+    this.tasting_ui = null;
     this.status_bar = null;
 }
 
@@ -31,14 +32,18 @@ Robusta.prototype.init = function() {
     // Locate our UI element.
     this.ui_elt = $("#" + this.ui_elt_name);
 
-    // Add the tastings list widget.
-    this.tastings_ui = new TastingsWidget(this);
-    this.tastings_ui.init(this.ui_elt);
+    // Add the tastings list widget, for admin users.
+    if (g.user_data.admin) {
+        this.tastings_ui = new TastingsWidget(this);
+        this.tastings_ui.init(this.ui_elt);
+    }
 
     // Status bar element.
     var sb = $('<div class="robusta-status-bar">Status</div>');
     sb.appendTo(this.ui_elt);
     this.status_bar = sb[0];
+
+    this.set_status("ready!");
 }
 
 Robusta.prototype.set_status = function(label) {
@@ -159,7 +164,6 @@ TastingsListItem.prototype.on_select = function() {
     this.list.selected_item = this;
 
     this.widget.toggleClass('selected');
-    this.list.robusta.set_status("selected: " + this.item['id']);
 
     // Initialize the tasting editor.
     var editor = new TastingEditorWidget(this.item, this.list);
