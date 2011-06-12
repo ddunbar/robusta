@@ -103,9 +103,9 @@ MenuBar.prototype.add_item = function(name, widget) {
 
 MenuBar.prototype.select_item = function(item) {
     if (this.active)
-        this.active[1].widget.hide();
+        this.active[1].deactivate();
     this.active = item;
-    this.active[1].widget.show();
+    this.active[1].activate();
 }
 
 /* Tastings UI Element */
@@ -143,6 +143,14 @@ TastingsWidget.prototype.init = function(parent) {
     setTimeout(function() { self.update_tastings() }, 1);
 
     return this;
+}
+
+TastingsWidget.prototype.activate = function() {
+    this.widget.show();
+}
+
+TastingsWidget.prototype.deactivate = function() {
+    this.widget.hide();
 }
 
 TastingsWidget.prototype.add_tasting = function() {
@@ -472,6 +480,14 @@ TechnicianWidget.prototype.init = function(parent) {
     return this;
 }
 
+TechnicianWidget.prototype.activate = function() {
+    this.widget.show();
+}
+
+TechnicianWidget.prototype.deactivate = function() {
+    this.widget.hide();
+}
+
 /* Taste Testing UI */
 
 function TestingWidget(robusta) {
@@ -489,4 +505,12 @@ TestingWidget.prototype.init = function(parent) {
     this.widget.append("taste testing ui");
 
     return this;
+}
+
+TestingWidget.prototype.activate = function() {
+    this.widget.show();
+}
+
+TestingWidget.prototype.deactivate = function() {
+    this.widget.hide();
 }
