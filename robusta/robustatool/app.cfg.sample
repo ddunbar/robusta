@@ -1,0 +1,11 @@
+# -*- Python -*-
+
+"""
+Robusta Configuration File
+"""
+
+# Should server run in debug mode?
+DEBUG = %(debug_server)r
+
+# Secret key for this server instance.
+SECRET_KEY = %(secret_key)r
