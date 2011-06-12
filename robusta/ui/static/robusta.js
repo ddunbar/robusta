@@ -154,9 +154,6 @@ TastingsWidget.prototype.init = function(parent) {
         '<div robusta-tasting-editor-container></div>');
     this.tasting_editor_container.appendTo(this.widget);
 
-    // Queue a load of the tastings.
-    setTimeout(function() { self.update_tastings() }, 1);
-
     // Try and select the last item automatically.
     if (g.user_data.active_tastings_item != undefined)
         this.selected_id = g.user_data.active_tastings_item;
@@ -165,7 +162,12 @@ TastingsWidget.prototype.init = function(parent) {
 }
 
 TastingsWidget.prototype.activate = function() {
+    var self = this;
+
     this.widget.show();
+
+    // Queue a load of the tastings.
+    setTimeout(function() { self.update_tastings() }, 1);
 }
 
 TastingsWidget.prototype.deactivate = function() {
