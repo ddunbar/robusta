@@ -145,7 +145,7 @@ TastingsWidget.prototype.add_tasting = function() {
     var self = this;
 
     this.robusta.set_status("adding a tasting...");
-    $.getJSON("/add_tasting", {}, function (data) {
+    $.getJSON("add_tasting", {}, function (data) {
         self.robusta.set_status("added a tasting.");
         self.selected_id = data['new_tasting_id'];
         self.update_tastings();
@@ -156,7 +156,7 @@ TastingsWidget.prototype.update_tastings = function() {
     var self = this;
 
     this.robusta.set_status("loading tastings...");
-    $.getJSON("/tastings", {}, function (data) {
+    $.getJSON("tastings", {}, function (data) {
         var tastings = data['tastings'];
 
         // Clear the tastings list.
@@ -331,7 +331,7 @@ TastingEditorWidget.prototype.save_tasting = function() {
     
     this.list.robusta.set_status('saving tasting "' + this.item['name'] + '"...');
     var data = {'tasting' : JSON.stringify(this.item) };
-    $.getJSON("/tasting/" + this.item['id'] + "/save", data, function (data) {
+    $.getJSON("tasting/" + this.item['id'] + "/save", data, function (data) {
         self.list.update_tastings();
     });
 }
@@ -344,7 +344,7 @@ TastingEditorWidget.prototype.delete_tasting = function() {
         return;
 
     this.list.robusta.set_status('remove tasting "' + this.item['name'] + '"...');
-    $.getJSON("/tasting/" + this.item['id'] + "/delete", {}, function (data) {
+    $.getJSON("tasting/" + this.item['id'] + "/delete", {}, function (data) {
         self.list.selected_id = null;
         self.list.update_tastings();
       });
@@ -359,7 +359,7 @@ TastingEditorWidget.prototype.activate_tasting = function() {
 
     this.list.robusta.set_status('activating tasting "' + this.item['name'] +
                                  '"...');
-    $.getJSON("/tasting/" + this.item['id'] + "/activate", {}, function (data) {
+    $.getJSON("tasting/" + this.item['id'] + "/activate", {}, function (data) {
         self.list.robusta.set_status('activated tasting "' + self.item['name'] +
                                      '".');
         self.list.update_tastings();
@@ -375,7 +375,7 @@ TastingEditorWidget.prototype.deactivate_tasting = function() {
 
     this.list.robusta.set_status('deactivating tasting "' + this.item['name'] +
                                  '"...');
-    $.getJSON("/tasting/" + this.item['id'] + "/deactivate", {},
+    $.getJSON("tasting/" + this.item['id'] + "/deactivate", {},
               function (data) {
         self.list.robusta.set_status('deactivated tasting "' +
                                      self.item['name'] + '".');
