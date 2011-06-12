@@ -18,7 +18,7 @@ frontend = flask.Module(__name__)
 
 @frontend.route('/')
 def index():
-    return render_template("index.html")
+    return render_template("index.html", user_data = current_app.get_user_data())
 
 @frontend.route('/favicon.ico')
 def favicon():

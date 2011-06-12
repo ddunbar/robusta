@@ -33,3 +33,11 @@ class App(flask.Flask):
 
         # Set the debug mode.
         self.debug = self.config["DEBUG"]
+
+    def get_user_data(self):
+        user = flask.session.get('active_user', None)
+        result = self.db.users.find_one({'_id' : user })
+        if result is None:
+            result = {}
+
+        return result
