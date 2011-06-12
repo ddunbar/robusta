@@ -36,25 +36,18 @@ Robusta.prototype.init = function() {
     this.menu_bar = new MenuBar(this);
     this.menu_bar.init($("#robusta-menu-ui"));
 
-    // Add the tastings list widget, for admin users.
-    if (g.user_data.admin) {
-        var w = new TastingsWidget(this);
-        w.init(this.ui_elt);
-        this.menu_bar.add_item("Tastings", w);
-    }
+    // Add the testing UI.
+    this.menu_bar.add_item("Testing",
+                           new TestingWidget(this).init(this.ui_elt));
 
     // Add the tasting technician widget.
-    if (g.user_data.technician) {
-        var w = new TechnicianWidget(this);
-        w.init(this.ui_elt);
-        this.menu_bar.add_item("Technician", w);
-    }
+    this.menu_bar.add_item("Technician",
+                           new TechnicianWidget(this).init(this.ui_elt));
 
-    // Add the testing UI.
-    if (1) {
-        var w = new TestingWidget(this);
-        w.init(this.ui_elt);
-        this.menu_bar.add_item("Testing", w);
+    // Add the tastings list widget, for admin users.
+    if (g.user_data.admin) {
+        this.menu_bar.add_item("Tastings",
+                               new TastingsWidget(this).init(this.ui_elt));
     }
 
     // Status bar element.
