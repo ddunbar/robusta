@@ -80,6 +80,8 @@ function MenuBar(robusta) {
 
 MenuBar.prototype.init = function(parent) {
     this.widget = parent;
+
+    return this;
 }
 
 MenuBar.prototype.add_item = function(name, widget) {
@@ -139,6 +141,8 @@ TastingsWidget.prototype.init = function(parent) {
 
     // Queue a load of the tastings.
     setTimeout(function() { self.update_tastings() }, 1);
+
+    return this;
 }
 
 TastingsWidget.prototype.add_tasting = function() {
@@ -210,6 +214,8 @@ TastingsListItem.prototype.init = function(parent) {
 
     // Add event handler for selection.
     this.widget.bind('click', function() { self.on_select(); })
+
+    return this;
 }
 
 TastingsListItem.prototype.on_select = function() {
@@ -320,6 +326,8 @@ TastingEditorWidget.prototype.init = function(parent) {
     });
     t.appendTo(techs);
     techs.appendTo(this.widget);
+
+    return this;
 }
 
 TastingEditorWidget.prototype.save_tasting = function() {
@@ -410,6 +418,8 @@ TastingMetricEditorWidget.prototype.init = function(parent) {
         self.widget.remove();
         array_remove(self.editor.item['metrics'], self.item);
       })
+
+    return this;
 }
 
 /* Tasting Variable Editor UI Widget */
@@ -439,6 +449,8 @@ TastingVariableEditorWidget.prototype.init = function(parent) {
         self.widget.remove();
         array_remove(self.editor.item['variables'], self.item);
       })
+
+    return this;
 }
 
 /* Taste Testing Technician UI */
@@ -456,6 +468,8 @@ TechnicianWidget.prototype.init = function(parent) {
     this.widget.appendTo(parent);
 
     this.widget.append("technician ui");
+
+    return this;
 }
 
 /* Taste Testing UI */
@@ -473,4 +487,6 @@ TestingWidget.prototype.init = function(parent) {
     this.widget.appendTo(parent);
 
     this.widget.append("taste testing ui");
+
+    return this;
 }
