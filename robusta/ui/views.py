@@ -102,7 +102,7 @@ def activate_tasting(id):
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
 
     current_app.db.tastings.update({}, { "$set" : {
-                "active" : False} })
+                "active" : False} }, multi=True)
     current_app.db.tastings.update({ "_id" : oid }, { "$set" : {
                 "active" : True} })
 
