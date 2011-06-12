@@ -5,6 +5,15 @@ import sys
 
 import robusta.ui.app
 
+def get_config_path(argument):
+    # If this is a directory, assume the app config is inside.
+    if os.path.isdir(argument):
+        config_path = os.path.join(argument, "app.cfg")
+    else:
+        config_path = argument
+
+    return os.path.abspath(config_path)
+
 def action_create(name, args):
     """create a new app instance"""
 
@@ -89,14 +98,41 @@ def action_runserver(name, args):
     if len(args) == 0:
         config_path = None
     elif len(args) == 1:
-        config_path, = args
-        config_path = os.path.abspath(config_path)
+        config_arg, = args
+        config_path = get_config_path(config_arg)
     else:
         parser.error("invalid number of arguments")
 
     instance = robusta.ui.app.App.create_standalone(
         config_path = config_path)
     instance.run()
+
+def action_make_admin(name, args):
+    """set an admin user"""
+
+    from optparse import OptionParser, OptionGroup
+    parser = OptionParser("%%prog %s [options] <config path> <user name>" % (
+            name,))
+    (opts, args) = parser.parse_args(args)
+
+    if len(args) != 2:
+        parser.error("invalid number of arguments")
+
+    config_arg,user_name = args
+    config_path = get_config_path(config_arg)
+    instance = robusta.ui.app.App.create_standalone(
+        config_path = config_path)
+
+    # Get the user instance.
+    result = instance.db.users.find_one({'_id' : user_name })
+    if result is None:
+        result = { "_id" : user_name }
+
+    result['admin'] = True
+
+    # Write back the user data.
+    instance.db.users.remove(user_name)
+    instance.db.users.insert(result)
     
 ###
 
