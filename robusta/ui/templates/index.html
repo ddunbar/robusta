@@ -16,9 +16,7 @@
 </head>
 <body>
   <div class="header">
-    <div class="header-menu">
-      <a href="{{ url_for('index') }}">robusta</a>
-    </div>
+    <div id="robusta-menu-ui"></div>
     <div class="header-user-info">
       &nbsp;
   {% if session.active_user %}
@@ -29,7 +27,7 @@
   </div>
   <div class="body">
     {% if session.active_user %}
-      <div id="robusta_ui"></div>
+      <div id="robusta-ui"></div>
     {% else %}
       <div class="login-box">
         <form action="{{ url_for('login') }}" method="POST">

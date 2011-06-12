@@ -5,7 +5,7 @@ window.onload = function() { init(); }
 var g = {};
 
 function init() {
-    g.robusta = new Robusta('robusta_ui');
+    g.robusta = new Robusta('robusta-ui');
     g.robusta.init();
 }
 
@@ -24,7 +24,7 @@ function array_remove(array, item) {
 function Robusta(ui_elt_name) {
     this.ui_elt_name = ui_elt_name;
     this.ui_elt = null;
-    this.tasting_ui = null;
+    this.menu_bar = null;
     this.status_bar = null;
 }
 
@@ -32,10 +32,15 @@ Robusta.prototype.init = function() {
     // Locate our UI element.
     this.ui_elt = $("#" + this.ui_elt_name);
 
+    // Add the menu bar.
+    this.menu_bar = new MenuBar(this);
+    this.menu_bar.init($("#robusta-menu-ui"));
+
     // Add the tastings list widget, for admin users.
     if (g.user_data.admin) {
-        this.tastings_ui = new TastingsWidget(this);
-        this.tastings_ui.init(this.ui_elt);
+        var w = new TastingsWidget(this);
+        w.init(this.ui_elt);
+        this.menu_bar.add_item("Tastings", w);
     }
 
     // Status bar element.
@@ -48,6 +53,43 @@ Robusta.prototype.init = function() {
 
 Robusta.prototype.set_status = function(label) {
     this.status_bar.innerHTML = label;
+}
+
+/* Menu Bar Controller */
+
+function MenuBar(robusta) {
+    this.robusta = robusta;
+    this.widget = null;
+    this.active = null;
+    this.items = [];
+}
+
+MenuBar.prototype.init = function(parent) {
+    this.widget = parent;
+}
+
+MenuBar.prototype.add_item = function(name, widget) {
+    var self = this;
+    var item = [name, widget];
+    this.items.push(item);
+
+    var button_elt = $('<div class="robusta-menu-item"></div>');
+    button_elt.appendTo(this.widget);
+    button_elt.append(name);
+    button_elt.bind('click', function(event) {self.select_item(item); });
+    if (this.active === null) {
+        this.active = item;
+        widget.widget.show();
+    } else {
+        widget.widget.hide();
+    }
+}
+
+MenuBar.prototype.select_item = function(item) {
+    if (this.active)
+        this.active[1].widget.hide();
+    this.active = item;
+    this.active[1].widget.show();
 }
 
 /* Tastings UI Element */

@@ -1,5 +1,17 @@
 /* Custom CSS For the Robusta UI */
 
+/* Menu Bar UI */
+
+#robusta-menu-ui {
+    float: left;
+}
+
+.robusta-menu-item {
+    border-right: 3px solid #80603E;
+    padding: 2px;
+    display: inline;
+}
+
 /* Tastings UI Widget */
 
 .robusta-tastings-widget {
@@ -29,6 +41,7 @@
     border: 1px solid #000;
     padding: 3px;
     height: 250px;
+    overflow: auto;
 }
 
 .robusta-tasting-metric-editor {
