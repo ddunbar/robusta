@@ -40,6 +40,23 @@ def logout():
     session.pop('active_user', None)
     return redirect(url_for("index"))
 
+@frontend.route('/save_user_pref')
+def save_user_pref():
+    preference = request.args.get('preference')
+    value = request.args.get('value')
+
+    if preference not in ('active_menu_item',):
+        return abort(403)
+
+    user = flask.session.get('active_user', None)
+    if not user:
+        return abort(500)
+
+    current_app.db.users.update({ '_id' : user },
+                                { '$set' : { preference : value } })
+
+    return flask.jsonify(result = 'OK')
+
 ###
 # Tasting's APIs
 

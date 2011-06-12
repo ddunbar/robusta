@@ -69,10 +69,15 @@ function MenuBar(robusta) {
     this.widget = null;
     this.active = null;
     this.items = [];
+    this.item_to_select = null;
 }
 
 MenuBar.prototype.init = function(parent) {
     this.widget = parent;
+
+    // Try and select the last item automatically.
+    if (g.user_data.active_menu_item != undefined)
+        this.item_to_select = g.user_data.active_menu_item;
 
     return this;
 }
@@ -92,6 +97,11 @@ MenuBar.prototype.add_item = function(name, widget) {
     } else {
         widget.widget.hide();
     }
+
+    if (this.item_to_select && name == this.item_to_select) {
+        if (this.active != item)
+            this.select_item(item);
+    }
 }
 
 MenuBar.prototype.select_item = function(item) {
@@ -99,6 +109,11 @@ MenuBar.prototype.select_item = function(item) {
         this.active[1].deactivate();
     this.active = item;
     this.active[1].activate();
+
+    // Dispatch a JSON query to save the active menu item to user preferences.
+    var data = { 'preference' : "active_menu_item",
+                 'value' : this.active[0] };
+    $.getJSON("save_user_pref", data, function (data) {});
 }
 
 /* Tastings UI Element */
