@@ -219,8 +219,10 @@ def add_product(id):
     note = request.args.get('note')
 
     # Assign a label ID to this product.
-    current_ids = set(current_app.db.products.find({ 'tasting' : oid },
-                                                   { 'label' : True }))
+    current_ids = set(
+        item['label']
+        for item in current_app.db.products.find({ 'tasting' : oid },
+                                                 { 'label' : True }))
     labels = list(set(range(100)) - current_ids)
     label = random.choice(labels)
 
