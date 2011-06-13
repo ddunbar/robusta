@@ -490,7 +490,9 @@ function TechnicianWidget(robusta) {
     this.robusta = robusta;
     this.widget = null;
     this.tasting = null;
+    this.tickets = null;
     this.current_tasting_elt = null;
+    this.current_tickets_elt = null;
 }
 
 TechnicianWidget.prototype.init = function(parent) {
@@ -503,6 +505,9 @@ TechnicianWidget.prototype.init = function(parent) {
     this.current_tasting_elt = $("<div></div>");
     this.current_tasting_elt.appendTo(this.widget);
 
+    this.current_tickets_elt = $("<div></div>");
+    this.current_tickets_elt.appendTo(this.widget);
+
     return this;
 }
 
@@ -513,6 +518,9 @@ TechnicianWidget.prototype.activate = function() {
 
     // Queue a load of the tasting data.
     setTimeout(function() { self.update_tasting() }, 1);
+
+    // Queue a load of the tickets data.
+    setTimeout(function() { self.update_tickets() }, 1);
 }
 
 TechnicianWidget.prototype.deactivate = function() {
@@ -539,7 +547,7 @@ TechnicianWidget.prototype.update_tasting = function() {
         }
         elt.appendTo(self.current_tasting_elt);
 
-        b = $('<input type="button" value="Add Product">');
+        var b = $('<input type="button" value="Add Product">');
         b.appendTo(self.current_tasting_elt);
         b.click(function () {
             var i = parseInt(elt[0].value);
@@ -549,6 +557,41 @@ TechnicianWidget.prototype.update_tasting = function() {
         })
 
         self.robusta.set_status("loaded current tasting.");
+    });
+}
+
+TechnicianWidget.prototype.update_tickets = function() {
+    var self = this;
+
+    this.robusta.set_status("loading technician tickets...");
+    $.getJSON("tickets", {}, function (data) {
+        var tickets = self.tickets = data['tickets'];
+
+        self.current_tickets_elt.empty();
+        self.current_tickets_elt.append("<hr>");
+
+        for (var i = 0; i != tickets.length; ++i) {
+            var ticket = tickets[i];
+            var item = $('<div></div>');
+            item.toggleClass("robusta-technician-product-editor");
+            item.append("Ticket -- ");
+            item.append("Label: " + ticket.label + ", ");
+            item.append("Note: " + ticket.note);
+            item.appendTo(self.current_tickets_elt);
+
+            var b = $('<input type="button" value="Claim">');
+            b.appendTo(item);
+            b.click(function () {
+                $.getJSON("ticket/" + ticket['id'] + "/claim", {},
+                  function (data) {
+                      self.robusta.set_status(
+                          "ticket claimed!");
+                      self.update_tickets();
+                  });
+                });
+        }
+
+        self.robusta.set_status("loaded tickets.");
     });
 }
 
@@ -625,6 +668,7 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
                           "product added, inform recipient!");
                       self.widget.empty();
                       self.widget.remove();
+                      self.editor.update_tickets();
                   });
     });
 

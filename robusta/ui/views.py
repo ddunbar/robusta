@@ -200,7 +200,6 @@ def tasting_products(id):
     # Validate the ID.
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
 
-    print list(current_app.db.products.find())
     products = []
     for item in current_app.db.products.find({ 'tasting' : oid }):
         products.append({ 'name' : item['name'],
@@ -235,5 +234,29 @@ def add_product(id):
     ticket = current_app.db.tickets.insert({ 'product' : result,
                                              'recipient' : recipient,
                                              'note' : note })
+
+    return flask.jsonify(result = 'OK')
+
+@technician_route('/tickets')
+def tickets():
+    user = flask.session.get('active_user', None)
+    if not user:
+        return abort(500)
+
+    tickets = []
+    for item in current_app.db.tickets.find({ 'recipient' : user }):
+        product = current_app.db.products.find_one(item['product'])
+        tickets.append({ 'id' : binascii.hexlify(item['_id'].binary),
+                         'label' : product['label'],
+                         'note' : item['note'] })
+
+    return flask.jsonify(tickets = tickets)
+
+@technician_route('/ticket/<id>/claim')
+def claim_ticket(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    current_app.db.tickets.remove(oid)
 
     return flask.jsonify(result = 'OK')
