@@ -100,7 +100,7 @@ MenuBar.prototype.add_item = function(name, widget) {
     var button_elt = $('<div class="robusta-menu-item"></div>');
     button_elt.appendTo(this.widget);
     button_elt.append(name);
-    button_elt.bind('click', function(event) {self.select_item(item); });
+    button_elt.click(function(event) {self.select_item(item); });
     if (this.active === null) {
         this.active = item;
         widget.widget.show();
@@ -242,7 +242,7 @@ TastingsListItem.prototype.init = function(parent) {
     this.widget.append(this.item['name']);
 
     // Add event handler for selection.
-    this.widget.bind('click', function() { self.on_select(); })
+    this.widget.click(function() { self.on_select(); })
 
     return this;
 }
@@ -489,6 +489,8 @@ TastingVariableEditorWidget.prototype.init = function(parent) {
 function TechnicianWidget(robusta) {
     this.robusta = robusta;
     this.widget = null;
+    this.tasting = null;
+    this.current_tasting_elt = null;
 }
 
 TechnicianWidget.prototype.init = function(parent) {
@@ -498,17 +500,135 @@ TechnicianWidget.prototype.init = function(parent) {
     this.widget = $('<div class="robusta-technician-editor"></div>');
     this.widget.appendTo(parent);
 
-    this.widget.append("technician ui");
+    this.current_tasting_elt = $("<div></div>");
+    this.current_tasting_elt.appendTo(this.widget);
 
     return this;
 }
 
 TechnicianWidget.prototype.activate = function() {
+    var self = this;
+
     this.widget.show();
+
+    // Queue a load of the tasting data.
+    setTimeout(function() { self.update_tasting() }, 1);
 }
 
 TechnicianWidget.prototype.deactivate = function() {
     this.widget.hide();
+}
+
+TechnicianWidget.prototype.update_tasting = function() {
+    var self = this;
+
+    this.robusta.set_status("loading technician data...");
+    $.getJSON("current_tasting", {}, function (data) {
+        var tasting = self.tasting = data['tasting'];
+
+        self.current_tasting_elt.empty();
+        self.current_tasting_elt.append("<b>Current Tasting</b><br>");
+        self.current_tasting_elt.append(tasting.name);
+        self.current_tasting_elt.append("<hr>");
+
+        var elt = $("<select></select>");
+        for (var i = 0; i != tasting['variables'].length; ++i) {
+            var variable = tasting['variables'][i];
+            elt.append('<option value="' + i.toString() +
+                       '">' + variable.name + "</option>");
+        }
+        elt.appendTo(self.current_tasting_elt);
+
+        b = $('<input type="button" value="Add Product">');
+        b.appendTo(self.current_tasting_elt);
+        b.click(function () {
+            var i = parseInt(elt[0].value);
+            var variable = tasting['variables'][i];
+            var w = new TechnicianProductEditorWidget(self, variable);
+            w.init(self.current_tasting_elt);
+        })
+
+        self.robusta.set_status("loaded current tasting.");
+    });
+}
+
+/* Technician Product Editor UI Widget */
+
+function TechnicianProductEditorWidget(editor, variable) {
+    this.editor = editor;
+    this.variable = variable;
+    this.widget = null;
+}
+
+TechnicianProductEditorWidget.prototype.init = function(parent) {
+    var self = this;
+
+    // Create the widget.
+    this.widget = $('<div class="robusta-technician-product-editor"></div>');
+    this.widget.appendTo(parent);
+
+    this.widget.append("<b>" + this.variable['name'] + "</b>: ");
+
+    // Add the name field.
+    var name_box = $("<div></div>");
+    name_box.appendTo(this.widget);
+    name_box.append("Name:");
+    var name_elt = $('<input type="text" value="New Name">');
+    name_elt.appendTo(name_box);
+
+    // Add the description field.
+    var desc_box = $("<div></div>");
+    desc_box.appendTo(this.widget);
+    desc_box.append("Description:");
+    var desc_elt = $('<textarea width="80" height="4"></textarea>');
+    desc_elt.append('Product Description');
+    desc_elt.appendTo(desc_box);
+
+    // Add the recipient field.
+    var rcv_box = $("<div></div>");
+    rcv_box.appendTo(this.widget);
+    rcv_box.append("Recipient:");
+    var rcv_elt = $('<select></select>');
+    var tasting = this.editor.tasting;
+    for (var i = 0; i != tasting['technicians'].length; ++i) {
+        rcv_elt.append("<option>" + tasting['technicians'][i] +
+                       "</option>");
+    }
+    rcv_elt.appendTo(rcv_box);
+
+    // Add the recipient note field.
+    var note_box = $("<div></div>");
+    note_box.appendTo(this.widget);
+    note_box.append("Recipient Note:");
+    var note_elt = $('<textarea width="80" height="4"></textarea>');
+    note_elt.append('Note for recipient');
+    note_elt.appendTo(note_box);
+
+    b = $('<input type="button" value="Cancel">');
+    b.appendTo(this.widget);
+    b.click(function() {
+        self.widget.empty();
+        self.widget.remove();
+    });
+
+    b = $('<input type="button" value="Submit">');
+    b.appendTo(this.widget);
+    b.click(function() {
+        self.editor.robusta.set_status("adding product...");
+        $.getJSON("tasting/" + tasting['id'] + "/add_product",
+                  { 'name' : name_elt[0].value,
+                    'description' : desc_elt[0].value,
+                    'recipient': rcv_elt[0].value,
+                    'note' : note_elt[0].value },
+                  function (data) {
+                      self.editor.robusta.set_status(
+                          "product added, inform recipient!");
+                      self.widget.empty();
+                      self.widget.remove();
+                  });
+    });
+
+    return this;
 }
 
 /* Taste Testing UI */

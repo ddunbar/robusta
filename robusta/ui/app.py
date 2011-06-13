@@ -55,3 +55,6 @@ class App(flask.Flask):
 
     def is_user_admin(self):
         return bool(self.get_user_data().get('admin'))
+
+    def is_user_technician(self):
+        return bool(self.get_user_data().get('technician'))

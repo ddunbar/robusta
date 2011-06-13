@@ -1,5 +1,6 @@
 import binascii
 import pymongo.objectid
+import random
 
 import flask
 from flask import abort
@@ -65,6 +66,15 @@ def save_user_pref():
                                 { '$set' : { preference : value } })
 
     return flask.jsonify(result = 'OK')
+
+###
+# General APIs
+
+@frontend.route('/current_tasting')
+def current_tasting():
+    item = current_app.get_active_tasting()
+    item["id"] = binascii.hexlify(item.pop('_id').binary)
+    return flask.jsonify(tasting = item)
 
 ###
 # Tasting's APIs
@@ -164,5 +174,63 @@ def save_tasting(id):
     # Update the database entry.
     current_app.db.tastings.remove(oid)
     current_app.db.tastings.insert(tasting)
+
+    return flask.jsonify(result = 'OK')
+
+###
+# Technician APIs
+
+# Decorator for technician users.
+def technician_route(rule, **options):
+    def decorator(f):
+        def wrap(**args):
+            # Validate the user has technician access.
+            if not current_app.is_user_technician():
+                return abort(403)
+
+            return f(**args)
+
+        frontend.add_url_rule(rule, f.__name__, wrap, **options)
+        return wrap
+    return decorator
+
+@technician_route('/tasting/<id>/products')
+def tasting_products(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    print list(current_app.db.products.find())
+    products = []
+    for item in current_app.db.products.find({ 'tasting' : oid }):
+        products.append({ 'name' : item['name'],
+                          'description' : item['description'] })
+
+    return flask.jsonify(products = products)
+
+@technician_route('/tasting/<id>/add_product')
+def add_product(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    name = request.args.get('name')
+    description = request.args.get('description')
+    recipient = request.args.get('recipient')
+    note = request.args.get('note')
+
+    # Assign a label ID to this product.
+    current_ids = set(current_app.db.products.find({ 'tasting' : oid },
+                                                   { 'label' : True }))
+    labels = list(set(range(100)) - current_ids)
+    label = random.choice(labels)
+
+    result = current_app.db.products.insert({ 'tasting' : oid,
+                                              'name' : name,
+                                              'description' : description,
+                                              'label' : label })
+
+    # Create a recipient ticket.
+    ticket = current_app.db.tickets.insert({ 'product' : result,
+                                             'recipient' : recipient,
+                                             'note' : note })
 
     return flask.jsonify(result = 'OK')
