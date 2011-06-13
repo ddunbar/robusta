@@ -659,7 +659,8 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
     b.click(function() {
         self.editor.robusta.set_status("adding product...");
         $.getJSON("tasting/" + tasting['id'] + "/add_product",
-                  { 'name' : name_elt[0].value,
+                  { 'kind' : self.variable['name'],
+                    'name' : name_elt[0].value,
                     'description' : desc_elt[0].value,
                     'recipient': rcv_elt[0].value,
                     'note' : note_elt[0].value },

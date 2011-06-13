@@ -67,6 +67,11 @@
     padding: 2px;
 }
 
+.robusta-technician-ticket-editor {
+    border: 1px solid #000;
+    padding: 2px;
+}
+
 /* Testing UI Widget */
 
 .robusta-testing-ui {

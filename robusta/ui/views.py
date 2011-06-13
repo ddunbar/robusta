@@ -203,6 +203,7 @@ def tasting_products(id):
     products = []
     for item in current_app.db.products.find({ 'tasting' : oid }):
         products.append({ 'name' : item['name'],
+                          'kind' : item.get('kind'),
                           'description' : item['description'] })
 
     return flask.jsonify(products = products)
@@ -212,6 +213,7 @@ def add_product(id):
     # Validate the ID.
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
 
+    kind = request.args.get('kind')
     name = request.args.get('name')
     description = request.args.get('description')
     recipient = request.args.get('recipient')
@@ -226,6 +228,7 @@ def add_product(id):
     label = random.choice(labels)
 
     result = current_app.db.products.insert({ 'tasting' : oid,
+                                              'kind' : kind,
                                               'name' : name,
                                               'description' : description,
                                               'label' : label })
