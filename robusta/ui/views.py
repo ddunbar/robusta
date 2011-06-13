@@ -63,7 +63,8 @@ def save_user_pref():
         return abort(500)
 
     current_app.db.users.update({ '_id' : user },
-                                { '$set' : { preference : value } })
+                                { '$set' : { preference : value } },
+                                upsert = True)
 
     return flask.jsonify(result = 'OK')
 
