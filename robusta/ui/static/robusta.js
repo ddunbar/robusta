@@ -318,7 +318,9 @@ TastingEditorWidget.prototype.init = function(parent) {
     b.click(function () {
         var variable = { name : "New Variable" }
         self.item['variables'].push(variable);
-        new TastingVariableEditorWidget(self, variable).init(variables);
+        var w = new TastingVariableEditorWidget(self, variable);
+        w.init(variables);
+        self.variable_widgets.push(w);
     })
     this.variable_widgets = [];
     for (var i = 0; i != this.item['variables'].length; ++i) {
