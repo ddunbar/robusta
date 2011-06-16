@@ -270,6 +270,7 @@ function TastingEditorWidget(item, list) {
     this.item = item;
     this.widget = null;
     this.list = list;
+    this.variable_widgets = null;
 
     if (this.item['technicians'] == undefined)
         this.item['technicians'] = [];
@@ -319,9 +320,11 @@ TastingEditorWidget.prototype.init = function(parent) {
         self.item['variables'].push(variable);
         new TastingVariableEditorWidget(self, variable).init(variables);
     })
+    this.variable_widgets = [];
     for (var i = 0; i != this.item['variables'].length; ++i) {
         var w = new TastingVariableEditorWidget(this, this.item['variables'][i]);
         w.init(variables);
+        this.variable_widgets.push(w);
     }
     variables.appendTo(this.widget);
 
@@ -422,6 +425,12 @@ TastingEditorWidget.prototype.deactivate_tasting = function() {
       });
 }
 
+TastingEditorWidget.prototype.update_sources = function() {
+    for (var i = 0; i != this.variable_widgets.length; ++i) {
+        this.variable_widgets[i].update_sources();
+    }
+}
+
 /* Tasting Metric Editor UI Widget */
 
 function TastingMetricEditorWidget(editor, item) {
@@ -459,6 +468,7 @@ function TastingVariableEditorWidget(editor, item) {
     this.editor = editor;
     this.item = item;
     this.widget = null;
+    this.source_elt = null;
 }
 
 TastingVariableEditorWidget.prototype.init = function(parent) {
@@ -471,17 +481,64 @@ TastingVariableEditorWidget.prototype.init = function(parent) {
     // Add a text input for the name.
     var name_elt = $('<input type="text" value="' + this.item['name'] + '">');
     name_elt.appendTo(this.widget);
-    name_elt.change(function() { self.item['name'] = name_elt[0].value });
-    
+    name_elt.change(function() {
+        self.item['name'] = name_elt[0].value;
+        self.editor.update_sources(); });
+
+    // Add a pulldown for selecting the source product.
+    this.source_elt = $('<select></select>');
+    this.widget.append("Source:");
+    this.source_elt.appendTo(this.widget);
+    this.update_sources();
+    this.source_elt.change(function() {
+        self.item['source_index'] = parseInt(self.source_elt[0].value);
+    });
+
     // Add a button for removing this variable.
     b = $('<input type="button" value="Delete">');
     b.appendTo(this.widget);
     b.click(function () {
         self.widget.remove();
-        array_remove(self.editor.item['variables'], self.item);
+
+        // Remove this as the source from any products and update other source
+        // indices.
+        var variables = self.editor.item['variables'];
+        var index =  variables.indexOf(self.item);
+        for (var i = 0; i != variables.length; ++i) {
+            var v = variables[i];
+            console.log([i, index, v]);
+            if (v['source_index'] === index) {
+                v['source_index'] = null;
+            } else if (v['source_index'] != undefined &&
+                       v['source_index'] > index) {
+                v['source_index']--;
+            }
+        }
+
+        array_remove(variables, self.item);
+
+        self.editor.update_sources();
       })
 
     return this;
+}
+
+TastingVariableEditorWidget.prototype.update_sources = function() {
+    this.source_elt.empty();
+    this.source_elt.append("<option>(no source)</option>");
+    for (var i = 0; i != this.editor.item['variables'].length; ++i) {
+        var v = this.editor.item['variables'][i];
+        if (v == this.item)
+            continue;
+
+        this.source_elt.append('<option value="' + i.toString() +'">' +
+                               this.editor.item['variables'][i]['name'] +
+                               '</option>');
+    }
+
+    if (this.item['source_index'] != undefined) {
+        this.source_elt[0].value = this.item['source_index'];
+    }
 }
 
 /* Taste Testing Technician UI */
