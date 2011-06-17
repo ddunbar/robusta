@@ -507,7 +507,6 @@ TastingVariableEditorWidget.prototype.init = function(parent) {
         var index =  variables.indexOf(self.item);
         for (var i = 0; i != variables.length; ++i) {
             var v = variables[i];
-            console.log([i, index, v]);
             if (v['source_index'] === index) {
                 v['source_index'] = null;
             } else if (v['source_index'] != undefined &&
@@ -728,7 +727,7 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
     desc_elt.appendTo(desc_box);
 
     // Add a field for the source, if used.
-    var source_elt = null;
+    this.source_elt = null;
     if (this.variable['source_index'] != undefined) {
         var source = this.source = this.editor.tasting.variables[
             this.variable['source_index']];
@@ -773,8 +772,8 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
     b.appendTo(this.widget);
     b.click(function() {
         var source = '';
-        if (source_elt)
-            source = source_elt[0].value;
+        if (self.source_elt)
+            source = self.source_elt[0].value;
 
         self.editor.robusta.set_status("adding product...");
         $.getJSON("tasting/" + tasting['id'] + "/add_product",
