@@ -244,7 +244,7 @@ def tasting_products(id):
 
     return flask.jsonify(products = products)
 
-@technician_route('/tasting/<id>/labels')
+@frontend.route('/tasting/<id>/labels')
 def tasting_labels(id):
     # Validate the ID.
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
