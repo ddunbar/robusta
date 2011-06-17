@@ -197,6 +197,23 @@ def save_tasting(id):
 
     return flask.jsonify(result = 'OK')
 
+@admin_route('/tasting/<id>/full_ratings')
+def full_ratings(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    # Get the current object.
+    current = current_app.db.tastings.find_one({ '_id' : oid })
+
+    # Get the new JSON object.
+    ratings = []
+    for item in current_app.db.ratings.find({ 'tasting' : oid }):
+        full_rating = current_app.get_full_rating(current, item)
+
+        ratings.append(full_rating)
+
+    return flask.jsonify(result = ratings)
+
 ###
 # Technician APIs
 
@@ -371,3 +388,34 @@ def add_tasting_rating(id):
                                     'user' : user })
 
     return flask.jsonify(result = 'OK')
+
+@frontend.route('/tasting/<id>/ratings')
+def tasting_ratings(id):
+    # FIXME: This should only be visible once a tasting has been "published", or
+    # to the admin.
+
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    # Get the current object.
+    current = current_app.db.tastings.find_one({ '_id' : oid })
+
+    # Get the new JSON object.
+    ratings = []
+    for item in current_app.db.ratings.find({ 'tasting' : oid }):
+        full_rating = current_app.get_full_rating(current, item)
+
+        # Resolve all the labels.
+        products = {}
+        for v in current['variables']:
+            # Get the product label.
+            label = full_rating['products'][v['name']]
+            product = current_app.db.products.find_one({ 'tasting' : oid,
+                                                         'label' : label })
+            products[v['name']] = product['name']
+
+        ratings.append({ 'rating' : item['rating'],
+                         'products' : products,
+                         'user' : item['user'] })
+
+    return flask.jsonify(result = ratings)
