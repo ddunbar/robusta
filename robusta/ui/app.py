@@ -58,3 +58,52 @@ class App(flask.Flask):
 
     def is_user_technician(self):
         return bool(self.get_user_data().get('technician'))
+
+    def get_full_rating(self, tasting, item):
+        user = item['user']
+        rating = item['rating']
+        products = {}
+
+        # First, expand every dependency.
+        worklist = item['products'].items()
+        while worklist:
+            item = worklist.pop()
+            name,label = item
+
+            # Get the product for this label.
+            product = self.db.products.find_one({'tasting' : tasting['_id'],
+                                                 'label' : label })
+            if not product:
+                raise ValueError,'invalid rating'
+
+            # Add the product label to the products map.
+            products[name] = product['label']
+
+            # Find the variable.
+            for variable in tasting['variables']:
+                if variable['name'] == name:
+                    break
+            else:
+                raise ValueError,'invalid rating'
+
+            # If this is a derived product, add it's source.
+            source_index = variable.get('source_index')
+            if source_index is not None:
+                source = tasting['variables'][source_index]
+                source_label = product['source']
+                worklist.append([source['name'], source_label])
+
+        # Verify that we have a value for each variable.
+        for v in tasting['variables']:
+            if v['name'] not in products:
+                raise ValueError,'invalid rating'
+
+        # Verify that we have a value for each metric.
+        for m in tasting['metrics']:
+            if m['name'] not in rating:
+                raise ValueError,'invalid rating'
+
+        full_rating = { 'rating' : rating,
+                        'products' : products,
+                        'user' : user }
+        return full_rating
