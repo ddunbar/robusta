@@ -15,6 +15,7 @@
 
   {# Add the user data. #}
   <script>
+    g.logged_in = {{ 1 if session.active_user else 0 }};
     g.user_data = {{ user_data|tojson|safe }};
   </script>
 </head>

@@ -33,6 +33,9 @@ function save_user_preference(key, value) {
     if (current_value == value)
         return;
 
+    if (!g.logged_in)
+        return;
+
     g.user_data[key] = value;
     $.getJSON("save_user_pref", { 'preference' : key, 'value' : value },
               function (data) {});
@@ -56,21 +59,27 @@ Robusta.prototype.init = function() {
     this.menu_bar.init($("#robusta-menu-ui"));
 
     // Add the testing UI.
-    this.menu_bar.add_item("Testing",
-                           new TestingWidget(this).init(this.ui_elt));
+    if (g.logged_in) {
+        this.menu_bar.add_item("Testing",
+                               new TestingWidget(this).init(this.ui_elt));
+    }
 
     // Add the tasting technician widget.
-    this.menu_bar.add_item("Technician",
-                           new TechnicianWidget(this).init(this.ui_elt));
+    if (g.logged_in && g.user_data.technician) {
+        this.menu_bar.add_item("Technician",
+                               new TechnicianWidget(this).init(this.ui_elt));
+    }
 
     // Add the tastings list widget, for admin users.
-    if (g.user_data.admin) {
+    if (g.logged_in && g.user_data.admin) {
         this.menu_bar.add_item("Tastings",
                                new TastingsWidget(this).init(this.ui_elt));
     }
 
-    this.menu_bar.add_item("Results",
-                           new ResultsWidget(this).init(this.ui_elt));
+    if (g.logged_in && g.user_data.admin) {
+        this.menu_bar.add_item("Results",
+                               new ResultsWidget(this).init(this.ui_elt));
+    }
 
     // Status bar element.
     var sb = $('<div class="robusta-status-bar">Status</div>');
@@ -387,6 +396,7 @@ TastingEditorWidget.prototype.save_tasting = function() {
     this.list.robusta.set_status('saving tasting "' + this.item['name'] + '"...');
     var data = {'tasting' : JSON.stringify(this.item) };
     $.getJSON("tasting/" + this.item['id'] + "/save", data, function (data) {
+        self.list.robusta.set_status('tasting saved.');
         self.list.update_tastings();
     });
 }
@@ -400,6 +410,7 @@ TastingEditorWidget.prototype.delete_tasting = function() {
 
     this.list.robusta.set_status('remove tasting "' + this.item['name'] + '"...');
     $.getJSON("tasting/" + this.item['id'] + "/delete", {}, function (data) {
+        self.list.robusta.set_status('tasting removed.');
         self.list.selected_id = null;
         self.list.update_tastings();
       });
@@ -873,6 +884,7 @@ TestingWidget.prototype.update_labels = function() {
     $.getJSON("tasting/" + this.tasting['id'] + '/labels', {}, function (data) {
         var labels = self.labels = data.labels;
 
+        self.robusta.set_status("ready to rate!");
         self.update_form();
     });
 }
