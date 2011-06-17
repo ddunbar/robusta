@@ -548,10 +548,12 @@ TastingVariableEditorWidget.prototype.update_sources = function() {
 function TechnicianWidget(robusta) {
     this.robusta = robusta;
     this.widget = null;
+    this.labels = null;
     this.tasting = null;
     this.tickets = null;
     this.current_tasting_elt = null;
     this.current_tickets_elt = null;
+    this.product_editors = [];
 }
 
 TechnicianWidget.prototype.init = function(parent) {
@@ -584,6 +586,21 @@ TechnicianWidget.prototype.activate = function() {
 
 TechnicianWidget.prototype.deactivate = function() {
     this.widget.hide();
+}
+
+TechnicianWidget.prototype.update_labels = function() {
+    var self = this;
+
+    if (!this.tasting)
+        return;
+
+    $.getJSON("tasting/" + this.tasting['id'] + '/labels', {}, function (data) {
+        var labels = self.labels = data.labels;
+
+        // Update any open product editors.
+        for (var i = 0; i != self.product_editors.length; ++i)
+            self.product_editors[i].update_labels();
+    });
 }
 
 TechnicianWidget.prototype.update_tasting = function() {
@@ -620,9 +637,13 @@ TechnicianWidget.prototype.update_tasting = function() {
             var variable = tasting['variables'][i];
             var w = new TechnicianProductEditorWidget(self, variable);
             w.init(self.current_tasting_elt);
+            self.product_editors.push(w);
         })
 
         self.robusta.set_status("loaded current tasting.");
+
+        // Queue a load of the labels data.
+        setTimeout(function() { self.update_labels() }, 1);
     });
 }
 
@@ -667,6 +688,20 @@ function TechnicianProductEditorWidget(editor, variable) {
     this.editor = editor;
     this.variable = variable;
     this.widget = null;
+    this.source = null;
+    this.source_elt = null;
+}
+
+TechnicianProductEditorWidget.prototype.update_labels = function() {
+    var labels = this.editor.labels[this.source['name']];
+    if (!labels)
+        return;
+
+    this.source_elt.empty();
+    for (var i = 0; i != labels.length; ++i) {
+        this.source_elt.append('<option value="' + labels[i] + '">' +
+                               labels[i] + '</option>');
+    }
 }
 
 TechnicianProductEditorWidget.prototype.init = function(parent) {
@@ -696,15 +731,16 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
     // Add a field for the source, if used.
     var source_elt = null;
     if (this.variable['source_index'] != undefined) {
-        var source = this.editor.tasting.variables[
+        var source = this.source = this.editor.tasting.variables[
             this.variable['source_index']];
         var source_box = $("<div></div>");
         source_box.appendTo(this.widget);
-        source_box.append('Source (' + source['name'] + '):');
+        source_box.append('Source');
 
-        source_elt = $('<input type="text" value="">');
-        source_elt.append('Label:');
-        source_elt.appendTo(source_box);
+        this.source_elt = $('<select></select>');
+        this.update_labels();
+        this.source_elt.appendTo(source_box);
+        source_box.append(' (' + source['name'] + '):');
     }
 
     // Add the recipient field.
@@ -760,7 +796,9 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
                           "product added, inform recipient!");
                       self.widget.empty();
                       self.widget.remove();
+                      self.editor.update_labels();
                       self.editor.update_tickets();
+                      array_remove(self.editor.product_editors, self);
                   });
     });
 

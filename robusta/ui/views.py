@@ -209,6 +209,19 @@ def tasting_products(id):
 
     return flask.jsonify(products = products)
 
+@technician_route('/tasting/<id>/labels')
+def tasting_labels(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    labels = {}
+    for item in current_app.db.products.find({ 'tasting' : oid }):
+        kind = item['kind']
+        per_kind = labels[kind] = labels.get(kind, [])
+        per_kind.append(item['label'])
+
+    return flask.jsonify(labels = labels)
+
 @technician_route('/tasting/<id>/add_product')
 def add_product(id):
     # Validate the ID.
