@@ -74,7 +74,8 @@ def save_user_pref():
 @frontend.route('/current_tasting')
 def current_tasting():
     item = current_app.get_active_tasting()
-    item["id"] = binascii.hexlify(item.pop('_id').binary)
+    if item:
+        item["id"] = binascii.hexlify(item.pop('_id').binary)
     return flask.jsonify(tasting = item)
 
 ###
@@ -213,11 +214,61 @@ def add_product(id):
     # Validate the ID.
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
 
+    # Get the tasting object.
+    tasting = current_app.db.tastings.find_one({ '_id' : oid })
+    if tasting is None:
+        return abort(500)
+
     kind = request.args.get('kind')
     name = request.args.get('name')
     description = request.args.get('description')
     recipient = request.args.get('recipient')
     note = request.args.get('note')
+    source = request.args.get('source')
+
+    # Validate the kind.
+    for variable in tasting['variables']:
+        if variable['name'] == kind:
+            break
+    else:
+        return abort(500)
+
+    # Validate the source information.
+    if source:
+        try:
+            source = int(source)
+        except:
+            return flask.jsonify(result = "ERROR",
+                                 error = "invalid source label")
+
+        source_item = current_app.db.products.find_one(
+            { 'tasting' : oid, 'label' : source })
+        if source_item is None:
+            # Invalid label.
+            return flask.jsonify(result = "ERROR",
+                                 error = "invalid source label")
+    else:
+        source = None
+        source_item = None
+
+    # Verify the source is valid for this variable.
+    source_index = variable.get('source_index')
+    if source_index is not None:
+        if not source_item:
+            # No source was given.
+            return flask.jsonify(result = "ERROR",
+                                 error = "missing source")
+
+        expected_source = tasting['variables'][source_index]
+        if source_item['kind'] != expected_source['name']:
+            # Invalid label kind.
+            return flask.jsonify(result = "ERROR",
+                                 error = "invalid source kind")
+    else:
+        if source_item:
+            # Shouldn't have a source with this item.
+            return flask.jsonify(result = "ERROR",
+                                 error = "unexpected source")
 
     # Assign a label ID to this product.
     current_ids = set(
@@ -231,7 +282,8 @@ def add_product(id):
                                               'kind' : kind,
                                               'name' : name,
                                               'description' : description,
-                                              'label' : label })
+                                              'label' : label,
+                                              'source' : source })
 
     # Create a recipient ticket.
     ticket = current_app.db.tickets.insert({ 'product' : result,

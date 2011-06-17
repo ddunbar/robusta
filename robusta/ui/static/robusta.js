@@ -594,6 +594,13 @@ TechnicianWidget.prototype.update_tasting = function() {
         var tasting = self.tasting = data['tasting'];
 
         self.current_tasting_elt.empty();
+
+        if (tasting === null) {
+            self.current_tasting_elt.append("<b>No Tasting In Progress</b>");
+            self.robusta.set_status("no current tasting.");
+            return;
+        }
+
         self.current_tasting_elt.append("<b>Current Tasting</b><br>");
         self.current_tasting_elt.append(tasting.name);
         self.current_tasting_elt.append("<hr>");
@@ -686,6 +693,20 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
     desc_elt.append('Product Description');
     desc_elt.appendTo(desc_box);
 
+    // Add a field for the source, if used.
+    var source_elt = null;
+    if (this.variable['source_index'] != undefined) {
+        var source = this.editor.tasting.variables[
+            this.variable['source_index']];
+        var source_box = $("<div></div>");
+        source_box.appendTo(this.widget);
+        source_box.append('Source (' + source['name'] + '):');
+
+        source_elt = $('<input type="text" value="">');
+        source_elt.append('Label:');
+        source_elt.appendTo(source_box);
+    }
+
     // Add the recipient field.
     var rcv_box = $("<div></div>");
     rcv_box.appendTo(this.widget);
@@ -716,14 +737,25 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
     b = $('<input type="button" value="Submit">');
     b.appendTo(this.widget);
     b.click(function() {
+        var source = '';
+        if (source_elt)
+            source = source_elt[0].value;
+
         self.editor.robusta.set_status("adding product...");
         $.getJSON("tasting/" + tasting['id'] + "/add_product",
                   { 'kind' : self.variable['name'],
                     'name' : name_elt[0].value,
                     'description' : desc_elt[0].value,
+                    'source' : source,
                     'recipient': rcv_elt[0].value,
                     'note' : note_elt[0].value },
                   function (data) {
+                      if (data.result == "ERROR") {
+                          self.editor.robusta.set_status(
+                              "unable to add product: " + data.error);
+                          return;
+                      }
+
                       self.editor.robusta.set_status(
                           "product added, inform recipient!");
                       self.widget.empty();
