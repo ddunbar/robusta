@@ -157,6 +157,24 @@ def deactivate_tasting(id):
 
     return flask.jsonify(result = 'OK')
 
+@admin_route('/tasting/<id>/reset_products')
+def reset_products(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    current_app.db.products.remove({ 'tasting' : oid })
+
+    return flask.jsonify(result = 'OK')
+
+@admin_route('/tasting/<id>/reset_ratings')
+def reset_ratings(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    current_app.db.ratings.remove({ 'tasting' : oid })
+
+    return flask.jsonify(result = 'OK')
+
 @admin_route('/tasting/<id>/save')
 def save_tasting(id):
     # Validate the ID.
