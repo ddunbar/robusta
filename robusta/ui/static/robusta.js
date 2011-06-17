@@ -19,6 +19,15 @@ function array_remove(array, item) {
     array.splice(index, 1);
 }
 
+function mean(array) {
+    var res = 0.0;
+    for (var i = 0; i != array.length; ++i)
+        res += array[i];
+    if (array.length)
+        res /= array.length;
+    return res;
+}
+
 function save_user_preference(key, value) {
     var current_value = g.user_data[key];
     if (current_value == value)
@@ -59,6 +68,9 @@ Robusta.prototype.init = function() {
         this.menu_bar.add_item("Tastings",
                                new TastingsWidget(this).init(this.ui_elt));
     }
+
+    this.menu_bar.add_item("Results",
+                           new ResultsWidget(this).init(this.ui_elt));
 
     // Status bar element.
     var sb = $('<div class="robusta-status-bar">Status</div>');
@@ -954,4 +966,165 @@ TestingWidget.prototype.update_form = function() {
                       self.robusta.set_status("rating submitted!");
                   });
     });
+}
+
+/* Results Display UI */
+
+function ResultsWidget(robusta) {
+    this.robusta = robusta;
+    this.widget = null;
+    this.tasting = null;
+    this.results = [];
+    this.user_elt = this.metric_elt = this.variable_elt = null;
+    this.results_table = null;
+}
+
+ResultsWidget.prototype.init = function(parent) {
+    var self = this;
+
+    // Create the widget.
+    this.widget = $('<div class="robusta-testing-ui"></div>');
+    this.widget.appendTo(parent);
+
+    // Add the UI pulldowns.
+    var user_select = $("<div></div>");
+    user_select.append("User Filter:");
+    this.user_elt = $("<select></select>");
+    this.user_elt.appendTo(user_select);
+    user_select.appendTo(this.widget);
+    this.user_elt.change(function() { self.compute_results(); })
+
+    // Add a UI option to select the metric.
+    var metric_select = $("<div></div>");
+    metric_select.append("Metric Filter:");
+    this.metric_elt = $("<select></select>");
+    this.metric_elt.appendTo(metric_select);
+    metric_select.appendTo(this.widget);
+    this.metric_elt.change(function() { self.compute_results(); })
+
+    // Add a UI option to select the metric.
+    var variable_select = $("<div></div>");
+    variable_select.append("Variable Filter:");
+    this.variable_elt = $("<select></select>");
+    this.variable_elt.appendTo(variable_select);
+    variable_select.appendTo(this.widget);
+    this.variable_elt.change(function() { self.compute_results(); })
+
+    // Add the data table.
+    this.results_table = $('<table border="1"></table>');
+    this.results_table.appendTo(this.widget);
+
+    return this;
+}
+
+ResultsWidget.prototype.activate = function() {
+    var self = this;
+
+    this.widget.show();
+
+    // Queue a load of the current tasting.
+    setTimeout(function() { self.update_tasting() }, 1);
+}
+
+ResultsWidget.prototype.deactivate = function() {
+    this.widget.hide();
+}
+
+ResultsWidget.prototype.update_tasting = function() {
+    var self = this;
+
+    this.robusta.set_status("loading current tasting...");
+    $.getJSON("current_tasting", {}, function (data) {
+        var tasting = self.tasting = data['tasting'];
+
+        // Queue a load of the results data.
+        setTimeout(function() { self.update_results() }, 1);
+    });
+}
+
+ResultsWidget.prototype.update_results = function() {
+    var self = this;
+
+    this.robusta.set_status("loading test results...");
+    $.getJSON('tasting/' + self.tasting['id'] + '/ratings', {}, function (data) {
+        var results = self.results = data['result'];
+
+        self.update_filters();
+    });
+}
+
+ResultsWidget.prototype.update_filters = function() {
+    // Compute the set of users who have participated.
+    var user_set = {};
+    for (var i = 0; i != this.results.length; ++i) {
+        var res = this.results[i];
+        user_set[res.user] = true;
+    }
+
+    this.user_elt.empty();
+    this.user_elt.append("<option>(all)</option>");
+    for (var i in user_set) {
+        this.user_elt.append("<option>" + i + "</option>");
+    }
+
+    this.metric_elt.empty();
+    this.metric_elt.append("<option>(all)</option>");
+    for (var i = 0; i != this.tasting.metrics.length; ++i) {
+        var m = this.tasting.metrics[i];
+        this.metric_elt.append("<option>" + m.name + "</option>");
+    }
+
+    this.variable_elt.empty();
+    for (var i = 0; i != this.tasting.variables.length; ++i) {
+        var v = this.tasting.variables[i];
+        this.variable_elt.append("<option>" + v.name + "</option>");
+    }
+
+    this.compute_results();
+}
+
+ResultsWidget.prototype.compute_results = function() {
+    // Aggregate the results according to the active filters.
+    var results = {};
+
+    for (var i = 0; i != this.results.length; ++i) {
+        var res = this.results[i];
+
+        // Honor user filter.
+        if (this.user_elt[0].value != "(all)" &&
+            this.user_elt[0].value != res.user)
+            continue;
+
+        // Create the rating value.
+        var value = null;
+        if (this.metric_elt[0].value == "(all)") {
+            value = 0.0;
+            for (var j = 0; j != this.tasting.metrics.length; ++j)
+                value += res.rating[this.tasting.metrics[j].name];
+        } else {
+            value = res.rating[this.metric_elt[0].value];
+        }
+
+        // Create the key.
+        var key = res.products[this.variable_elt[0].value];
+        var items = results[key];
+        if (items == undefined) {
+            results[key] = items = [];
+        }
+        items.push(value);
+    }
+
+    this.results_table.empty();
+    this.results_table.append("<thead><tr>" +
+                              "<th>" + this.variable_elt[0].value + "</th>" +
+                              "<th>Rating</th>" +
+                              "</tr></thead>");
+    for (var key in results) {
+        var ratings = results[key];
+        var m = mean(ratings, 0.0);
+        this.results_table.append("<tr>" +
+                                  "<td>" + key + "</td>" +
+                                  "<td>" + m.toFixed(2) + "</td>" +
+                                  "</tr>");
+    }
 }
