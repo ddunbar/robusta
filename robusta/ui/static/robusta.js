@@ -1096,13 +1096,12 @@ ResultsWidget.prototype.compute_results = function() {
             continue;
 
         // Create the rating value.
-        var value = null;
+        var values = [];
         if (this.metric_elt[0].value == "(all)") {
-            value = 0.0;
             for (var j = 0; j != this.tasting.metrics.length; ++j)
-                value += res.rating[this.tasting.metrics[j].name];
+                values.push(res.rating[this.tasting.metrics[j].name]);
         } else {
-            value = res.rating[this.metric_elt[0].value];
+            values.push(res.rating[this.metric_elt[0].value]);
         }
 
         // Create the key.
@@ -1111,7 +1110,7 @@ ResultsWidget.prototype.compute_results = function() {
         if (items == undefined) {
             results[key] = items = [];
         }
-        items.push(value);
+        items.push(mean(values));
     }
 
     this.results_table.empty();
