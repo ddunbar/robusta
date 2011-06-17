@@ -101,9 +101,8 @@ MenuBar.prototype.add_item = function(name, widget) {
     button_elt.appendTo(this.widget);
     button_elt.append(name);
     button_elt.click(function(event) {self.select_item(item); });
-    if (this.active === null) {
-        this.active = item;
-        widget.widget.show();
+    if (!this.item_to_select && this.active === null) {
+        this.select_item(item);
     } else {
         widget.widget.hide();
     }
