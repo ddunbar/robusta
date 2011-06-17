@@ -352,6 +352,10 @@ def claim_ticket(id):
 
 @frontend.route('/tasting/<id>/rate')
 def add_tasting_rating(id):
+    user = flask.session.get('active_user', None)
+    if not user:
+        return abort(500)
+
     # Validate the ID.
     oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
 
@@ -363,6 +367,7 @@ def add_tasting_rating(id):
     # Add the rating to the database.
     current_app.db.ratings.insert({ 'tasting' : oid,
                                     'products' : products,
-                                    'rating' : rating })
+                                    'rating' : rating,
+                                    'user' : user })
 
     return flask.jsonify(result = 'OK')
