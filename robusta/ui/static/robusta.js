@@ -808,6 +808,9 @@ TechnicianProductEditorWidget.prototype.init = function(parent) {
 function TestingWidget(robusta) {
     this.robusta = robusta;
     this.widget = null;
+    this.rating_form = null;
+    this.product_items = null;
+    this.rating_items = null;
 }
 
 TestingWidget.prototype.init = function(parent) {
@@ -817,15 +820,138 @@ TestingWidget.prototype.init = function(parent) {
     this.widget = $('<div class="robusta-testing-ui"></div>');
     this.widget.appendTo(parent);
 
-    this.widget.append("taste testing ui");
+    this.rating_form = $("<div></div>");
+    this.rating_form.appendTo(this.widget);
 
     return this;
 }
 
 TestingWidget.prototype.activate = function() {
+    var self = this;
+
     this.widget.show();
+
+    // Queue a load of the current tasting.
+    setTimeout(function() { self.update_tasting() }, 1);
 }
 
 TestingWidget.prototype.deactivate = function() {
     this.widget.hide();
+}
+
+TestingWidget.prototype.update_tasting = function() {
+    var self = this;
+
+    this.robusta.set_status("loading current tasting...");
+    $.getJSON("current_tasting", {}, function (data) {
+        var tasting = self.tasting = data['tasting'];
+
+        // Queue a load of the labels data.
+        setTimeout(function() { self.update_labels() }, 1);
+    });
+}
+
+TestingWidget.prototype.update_labels = function() {
+    var self = this;
+
+    if (!this.tasting)
+        return;
+
+    this.robusta.set_status("loading product labels...");
+    $.getJSON("tasting/" + this.tasting['id'] + '/labels', {}, function (data) {
+        var labels = self.labels = data.labels;
+
+        self.update_form();
+    });
+}
+
+TestingWidget.prototype.update_form = function() {
+    var self = this;
+
+    this.rating_form.empty();
+
+    this.rating_form.append("<b>Current Tasting</b><br>");
+    this.rating_form.append(this.tasting.name);
+    this.rating_form.append("<hr>");
+
+    // Add items to select the products.
+    this.product_items = [];
+    for (var i = 0; i != this.tasting['variables'].length; ++i) {
+        var has_dependent = false;
+        for (var j = 0; j != this.tasting['variables'].length; ++j) {
+            if (this.tasting['variables'][j]['source_index'] == i)
+                has_dependent = true;
+        }
+        if (has_dependent)
+            continue;
+
+        var elt = $("<div></div>");
+        elt.appendTo(this.rating_form);
+
+        // Otherwise add a UI item for this.
+        var variable = this.tasting['variables'][i];
+        elt.append(variable['name'] + ':');
+
+        var variable_elt = $("<select></select>");
+        var labels = this.labels[variable['name']];
+        if (labels) {
+            for (var j = 0; j != labels.length; ++j) {
+                variable_elt.append('<option value="' + labels[j] +'">' +
+                                    labels[j] + "</option>");
+            }
+        }
+        variable_elt.appendTo(elt);
+        this.product_items.push([variable, variable_elt[0]]);
+
+        this.rating_form.append("<hr>");
+    }
+
+    // Add fields for the metrics.
+    this.rating_items = [];
+    for (var i = 0; i != this.tasting['metrics'].length; ++i) {
+        var metric = this.tasting['metrics'][i];
+
+        var elt = $("<div></div>");
+        elt.appendTo(this.rating_form);
+
+        elt.append(metric['name'] + ':');
+        var value_elt = $('<select></select>');
+        value_elt.append("<option>-</option>");
+        for (var j = 100; j != -1; --j) {
+            var value = (j / 10.).toFixed(1);
+            value_elt.append('<option>' + (j / 10.).toFixed(1) + "</option>");
+        }
+        value_elt.appendTo(elt);
+
+        this.rating_items.push([metric, value_elt[0]]);
+    }
+
+    b = $('<input type="button" value="Rate!">');
+    b.appendTo(this.rating_form);
+    b.click(function() {
+        // Collate the rating data.
+        var products = {};
+        var rating = {};
+        for (var i = 0; i != self.product_items.length; ++i) {
+            var item = self.product_items[i];
+            products[item[0]['name']] = parseInt(item[1].value);
+        }
+        for (var i = 0; i != self.rating_items.length; ++i) {
+            var item = self.rating_items[i];
+            rating[item[0]['name']] = parseFloat(item[1].value);
+
+            if (item[1].value == "-") {
+                alert('Please select a rating for "' +
+                      item[0]['name'] + '"!');
+                return;
+            }
+        }
+        var data = { 'rating' : JSON.stringify({
+            products : products,
+            rating : rating }) };
+        $.getJSON("tasting/" + self.tasting['id'] + '/rate', data,
+                  function (data) {
+                      self.robusta.set_status("rating submitted!");
+                  });
+    });
 }

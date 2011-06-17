@@ -328,3 +328,23 @@ def claim_ticket(id):
     current_app.db.tickets.remove(oid)
 
     return flask.jsonify(result = 'OK')
+
+###
+# Testing APIs
+
+@frontend.route('/tasting/<id>/rate')
+def add_tasting_rating(id):
+    # Validate the ID.
+    oid = pymongo.objectid.ObjectId(binascii.unhexlify(id))
+
+    # Get the new JSON object.
+    data = json.loads(request.args.get('rating'))
+    products = data['products']
+    rating = data['rating']
+
+    # Add the rating to the database.
+    current_app.db.ratings.insert({ 'tasting' : oid,
+                                    'products' : products,
+                                    'rating' : rating })
+
+    return flask.jsonify(result = 'OK')
