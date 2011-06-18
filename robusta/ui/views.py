@@ -381,6 +381,12 @@ def add_tasting_rating(id):
     products = data['products']
     rating = data['rating']
 
+    # Delete any existing rating for this user, multi here is spurious but
+    # defensive.
+    current_app.db.ratings.remove({ 'tasting' : oid,
+                                    'products' : products,
+                                    'user' : user }, multi=True)
+    
     # Add the rating to the database.
     current_app.db.ratings.insert({ 'tasting' : oid,
                                     'products' : products,
