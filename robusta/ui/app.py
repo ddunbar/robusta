@@ -3,6 +3,16 @@ import flask
 
 import robusta.ui.views
 
+class RootSlashPatchMiddleware(object):
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        if environ['PATH_INFO'] == '':
+            return flask.redirect(environ['SCRIPT_NAME'] + '/')(
+                environ, start_response)
+        return self.app(environ, start_response)
+
 class App(flask.Flask):
     @staticmethod
     def create_standalone(config_path = None):
@@ -21,6 +31,10 @@ class App(flask.Flask):
         super(App, self).__init__(name)
         self.connection = pymongo.Connection()
         self.db = self.connection['robusta_db']
+
+        # Inject a fix for missing slashes on the root URL (see Flask issue
+        # #169).
+        self.wsgi_app = RootSlashPatchMiddleware(self.wsgi_app)
         
     def load_config(self, config_path):
         if config_path is not None:
