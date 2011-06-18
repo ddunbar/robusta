@@ -689,7 +689,8 @@ TechnicianWidget.prototype.update_tickets = function() {
 
             var b = $('<input type="button" value="Claim">');
             b.appendTo(item);
-            b.click(function () {
+            b.click({ ticket: ticket }, function (evt) {
+                var ticket = evt.data.ticket;
                 $.getJSON("ticket/" + ticket['id'] + "/claim", {},
                   function (data) {
                       self.robusta.set_status(
