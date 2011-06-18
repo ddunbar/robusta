@@ -832,6 +832,7 @@ function TestingWidget(robusta) {
     this.robusta = robusta;
     this.widget = null;
     this.rating_form = null;
+    this.scoring_panel = null;
     this.product_items = null;
     this.rating_items = null;
 }
@@ -845,6 +846,10 @@ TestingWidget.prototype.init = function(parent) {
 
     this.rating_form = $("<div></div>");
     this.rating_form.appendTo(this.widget);
+
+    this.scoring_panel = $("<div></div>");
+    this.scoring_panel.hide();
+    this.scoring_panel.appendTo(this.widget);
 
     return this;
 }
@@ -918,6 +923,7 @@ TestingWidget.prototype.update_form = function() {
 
         var variable_elt = $("<select></select>");
         var labels = this.labels[variable['name']];
+        variable_elt.append('<option value="null">(please choose)</option>');
         if (labels) {
             for (var j = 0; j != labels.length; ++j) {
                 variable_elt.append('<option value="' + labels[j] +'">' +
@@ -925,6 +931,21 @@ TestingWidget.prototype.update_form = function() {
             }
         }
         variable_elt.appendTo(elt);
+        variable_elt.change(function() {
+            var all_chosen = true;
+            for (var i = 0; i != self.product_items.length; ++i) {
+                if (self.product_items[i][1].value == "null") {
+                    all_chosen = false;
+                    break;
+                }
+            }
+
+            if (all_chosen) {
+                self.scoring_panel.show();
+            } else {
+                self.scoring_panel.hide();
+            }
+        });
         this.product_items.push([variable, variable_elt[0]]);
 
         this.rating_form.append("<hr>");
@@ -936,7 +957,7 @@ TestingWidget.prototype.update_form = function() {
         var metric = this.tasting['metrics'][i];
 
         var elt = $("<div></div>");
-        elt.appendTo(this.rating_form);
+        elt.appendTo(this.scoring_panel);
 
         elt.append(metric['name'] + ':');
         var value_elt = $('<select></select>');
@@ -951,13 +972,18 @@ TestingWidget.prototype.update_form = function() {
     }
 
     b = $('<input type="button" value="Rate!">');
-    b.appendTo(this.rating_form);
+    b.appendTo(this.scoring_panel);
     b.click(function() {
         // Collate the rating data.
         var products = {};
         var rating = {};
         for (var i = 0; i != self.product_items.length; ++i) {
             var item = self.product_items[i];
+            if (item[1].value == "null") {
+                alert('Please select a product for "' +
+                      item[0]['name'] + '"!');
+                return;
+            }
             products[item[0]['name']] = parseInt(item[1].value);
         }
         for (var i = 0; i != self.rating_items.length; ++i) {
@@ -975,6 +1001,14 @@ TestingWidget.prototype.update_form = function() {
             rating : rating }) };
         $.getJSON("tasting/" + self.tasting['id'] + '/rate', data,
                   function (data) {
+                      for (var i = 0; i != self.product_items.length; ++i) {
+                          self.product_items[i][1].value = "null";
+                      }
+                      for (var i = 0; i != self.rating_items.length; ++i) {
+                          self.rating_items[i][1].value = "-";
+                      }
+                      self.scoring_panel.hide();
+
                       self.robusta.set_status("rating submitted!");
                   });
     });
