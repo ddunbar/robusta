@@ -76,9 +76,16 @@ Robusta.prototype.init = function() {
                                new TastingsWidget(this).init(this.ui_elt));
     }
 
+    // Add the results widget, for admin users.
     if (g.logged_in && g.user_data.admin) {
         this.menu_bar.add_item("Results",
                                new ResultsWidget(this).init(this.ui_elt));
+    }
+
+    // Add the users ratings page.
+    if (g.logged_in) {
+        this.menu_bar.add_item("My Ratings",
+                               new MyRatingsWidget(this).init(this.ui_elt));
     }
 
     // Status bar element.
@@ -1172,5 +1179,107 @@ ResultsWidget.prototype.compute_results = function() {
                                   "<td>" + key + "</td>" +
                                   "<td>" + m.toFixed(2) + "</td>" +
                                   "</tr>");
+    }
+}
+
+/* MyRatings Display UI */
+
+function MyRatingsWidget(robusta) {
+    this.robusta = robusta;
+    this.widget = null;
+    this.results = null;
+}
+
+MyRatingsWidget.prototype.init = function(parent) {
+    var self = this;
+
+    // Create the widget.
+    this.widget = $('<div class="robusta-testing-ui"></div>');
+    this.widget.appendTo(parent);
+
+    // Create the table for the ratings.
+    this.ratings_table = $('<table border="1"></table>');
+    this.ratings_table.appendTo(this.widget);
+    
+    return this;
+}
+
+MyRatingsWidget.prototype.activate = function() {
+    var self = this;
+
+    this.widget.show();
+
+    // Queue a load of the results data.
+    setTimeout(function() { self.update_results() }, 1);
+}
+
+MyRatingsWidget.prototype.deactivate = function() {
+    this.widget.hide();
+}
+
+MyRatingsWidget.prototype.update_results = function() {
+    var self = this;
+
+    this.robusta.set_status("loading ratings...");
+    $.getJSON('current_tasting/my_ratings', {}, function (data) {
+        self.ratings = data['ratings'];
+
+        self.robusta.set_status("loaded ratings.");
+
+        self.update_display();
+    });
+}
+
+MyRatingsWidget.prototype.update_display = function() {
+    var product_set = {};
+    var metric_set = {};
+    for (var i = 0; i != this.ratings.length; ++i) {
+        var rating = this.ratings[i];
+
+        for (var key in rating.products) {
+            product_set[key] = true;
+        }
+        for (var key in rating.rating) {
+            metric_set[key] = true;
+        }
+    }
+
+    var product_items = [];
+    for (var i in product_set) {
+        product_items.push(i);
+    }
+
+    var metric_items = [];
+    for (var i in metric_set) {
+        metric_items.push(i);
+    }
+
+    this.ratings_table.empty();
+    var thead = $("<thead></thead>");
+    var row = $("<tr></tr>");
+    row.appendTo(thead);
+    for (var i = 0; i != product_items.length; ++i) {
+        row.append("<th>" + product_items[i] + "</th>");
+    }
+    for (var i = 0; i != metric_items.length; ++i) {
+        row.append("<th>" + metric_items[i] + "</th>");
+    }
+    row.append("<th>Notes</th>");
+    thead.appendTo(this.ratings_table);
+
+    for (var i = 0; i != this.ratings.length; ++i) {
+        var rating = this.ratings[i];
+        var row = $("<tr></tr>");
+
+        for (var j = 0; j != product_items.length; ++j) {
+            row.append("<td>" + rating.products[product_items[j]] + "</td>");
+        }
+        for (var j = 0; j != metric_items.length; ++j) {
+            row.append("<td>" + parseFloat(
+                rating.rating[metric_items[j]].toFixed(2)) + "</td>");
+        }
+        row.append("<td>" + rating.notes + "</td>");
+
+        row.appendTo(this.ratings_table);
     }
 }

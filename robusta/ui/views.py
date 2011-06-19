@@ -78,6 +78,24 @@ def current_tasting():
         item["id"] = binascii.hexlify(item.pop('_id').binary)
     return flask.jsonify(tasting = item)
 
+@frontend.route('/current_tasting/my_ratings')
+def current_tasting_my_ratings():
+    user = flask.session.get('active_user', None)
+    if not user:
+        return abort(500)
+
+    item = current_app.get_active_tasting()
+    oid = item['_id']
+
+    ratings = []
+    for item in current_app.db.ratings.find({ 'tasting' : oid,
+                                              'user' : user }):
+        ratings.append({ 'products' : item['products'],
+                         'rating' : item['rating'],
+                         'notes' : item.get('notes','') })
+
+    return flask.jsonify(ratings = ratings)
+
 ###
 # Tasting's APIs
 
