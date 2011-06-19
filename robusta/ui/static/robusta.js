@@ -1264,7 +1264,7 @@ MyRatingsWidget.prototype.update_display = function() {
     for (var i = 0; i != metric_items.length; ++i) {
         row.append("<th>" + metric_items[i] + "</th>");
     }
-    row.append("<th>Notes</th>");
+//    row.append("<th>Notes</th>");
     thead.appendTo(this.ratings_table);
 
     for (var i = 0; i != this.ratings.length; ++i) {
@@ -1278,7 +1278,7 @@ MyRatingsWidget.prototype.update_display = function() {
             row.append("<td>" + parseFloat(
                 rating.rating[metric_items[j]].toFixed(2)) + "</td>");
         }
-        row.append("<td>" + rating.notes + "</td>");
+//        row.append("<td>" + rating.notes + "</td>");
 
         row.appendTo(this.ratings_table);
     }
