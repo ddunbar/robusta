@@ -12,7 +12,6 @@ body {
     font-size: small;
     padding: 2px;
     color: #FFF;
-    width: 100%;
 }
 .header a {
     color: #FFF;
@@ -24,9 +23,9 @@ body {
 }
 
 .header-user-info {
-    float: right;
+    float: left;
     text-align: right;
-    padding-right: 10px;
+    padding-left: 10px;
 }
 
 .body {
